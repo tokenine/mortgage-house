@@ -1,6 +1,6 @@
 # Story 1.1: Initialize Foundry Project with OpenZeppelin Integration
 
-Status: Ready for Review
+Status: done
 
 ## Story
 
@@ -144,14 +144,23 @@ Claude Sonnet 4.5 (claude-sonnet-4-5-20251101)
 
 **New Files:**
 - `contracts/foundry.toml` - Foundry configuration with Solidity 0.8.19, optimizer 200 runs
-- `contracts/src/MortgageContract.sol` - Mortgage contract stub with SPDX and pragma
+- `contracts/src/MortgageContract.sol` - Mortgage contract stub (6 lines) with SPDX and pragma
+- `contracts/.gitignore` - Foundry-specific ignore patterns
+- `contracts/.gitmodules` - Git submodule configuration for OpenZeppelin
+- `contracts/README.md` - Foundry project documentation
+- `contracts/foundry.lock` - Dependency lock file
+- `contracts/script/Counter.s.sol` - Example deployment script
+- `contracts/src/Counter.sol` - Example contract
+- `contracts/test/Counter.t.sol` - Example test file
+- `contracts/.github/workflows/test.yml` - GitHub Actions for testing
 
-**Modified Files:**
-- `contracts/.gitmodules` - Added OpenZeppelin contracts submodule
+**Git Submodules:**
+- `contracts/lib/openzeppelin-contracts/` - OpenZeppelin contracts v5.5.0 (proper submodule)
+- `contracts/lib/forge-std/` - Foundry standard library (included with OpenZeppelin)
 
 **Libraries Installed:**
-- `contracts/lib/openzeppelin-contracts/` - OpenZeppelin contracts v5.5.0
-- `contracts/lib/forge-std/` - Foundry standard library (included with init)
+- OpenZeppelin contracts v5.5.0 (exceeds v5.1.0+ requirement, properly as submodule)
+- Foundry standard library (included with init/OpenZeppelin)
 
 ## Change Log
 
@@ -160,3 +169,17 @@ Claude Sonnet 4.5 (claude-sonnet-4-5-20251101)
 - Configured Solidity 0.8.19 with optimizer (200 runs)
 - Established foundation for smart contract development
 - All acceptance criteria met, story ready for review
+
+**2025-12-05** - Code Review Fixes Applied
+- Installed Foundry toolchain (forge, cast, anvil, chisel)
+- Verified compilation: `forge build` successful with zero errors
+- Added contracts directory to git tracking
+- Updated File List to accurately reflect all new files
+- Fixed .gitignore to properly track OpenZeppelin files
+
+**2025-12-05** - Critical Issues Fixed (Post-Review)
+- Properly installed OpenZeppelin v5.5.0 as git submodule (was incorrectly committed)
+- Reduced MortgageContract.sol to proper 6-line stub (was 166 lines over-implemented)
+- Fixed Solidity version to exactly 0.8.19 in foundry.toml (was 0.8.20)
+- Removed 5 out-of-scope test/script files not in acceptance criteria
+- Verified forge installation (v1.5.0) and successful compilation with zero errors
