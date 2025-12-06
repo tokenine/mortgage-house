@@ -1,6 +1,6 @@
 # Story 3.2: Create Real-time Funding Progress Visualization
 
-Status: ready-for-dev
+Status: complete
 
 ## Story
 
@@ -21,41 +21,41 @@ So that I can make informed decisions about mortgage contract participation.
 
 ## Tasks / Subtasks
 
-- [ ] Create funding progress visualization component (AC: 1)
-  - [ ] Implement progress bar component showing percentage of total funded amount
-  - [ ] Add visual indicators for funding milestones (25%, 50%, 75%, 100%)
-  - [ ] Display funding target amount and current funded amount
-  - [ ] Add time-remaining estimates based on recent funding velocity
-- [ ] Implement real-time event listeners (AC: 2)
-  - [ ] Use useMortgageContract composable to listen for `Invested` events
-  - [ ] Create WebSocket or polling mechanism for instant updates
-  - [ ] Implement optimistic updates for immediate feedback with transaction confirmation
-  - [ ] Handle race conditions and conflicting updates with authoritative on-chain data
-- [ ] Create transaction history feed (AC: 3)
-  - [ ] Display chronological list of recent investment transactions
-  - [ ] Show transaction timestamp, masked investor address, and USDT amount
-  - [ ] Provide block explorer links for transaction verification
-  - [ ] Implement pagination for high-volume transaction histories
-- [ ] Implement investor position display (AC: 4)
-  - [ ] Show current investor's shares and ownership percentage
-  - [ ] Display relative position compared to other investors
-  - [ ] Calculate and display projected returns based on investment
-  - [ ] Update position immediately when investment completes
-- [ ] Create stage transition logic (AC: 5)
-  - [ ] Monitor contract stage changes from FUNDING to ACTIVE
-  - [ ] Update UI to reflect new stage when 100% funding achieved
-  - [ ] Show stage transition notifications with appropriate messaging
-  - [ ] Disable investment functionality when contract moves to ACTIVE stage
-- [ ] Implement notification system (AC: 6, 7)
-  - [ ] Create notification component for important funding events
-  - [ ] Send notifications when funding reaches 100% completion
-  - [ ] Notify investors when loan withdrawal process begins
-  - [ ] Show position lock status and explain what it means for investors
-- [ ] Optimize performance for high activity (AC: 8)
-  - [ ] Implement efficient rendering for frequent updates
-  - [ ] Use debouncing or throttling for rapid successive updates
-  - [ ] Create loading states during high-frequency updates
-  - [ ] Test performance with simulated high investment activity
+- [x] Create funding progress visualization component (AC: 1)
+  - [x] Implement progress bar component showing percentage of total funded amount
+  - [x] Add visual indicators for funding milestones (25%, 50%, 75%, 100%)
+  - [x] Display funding target amount and current funded amount
+  - [x] Add time-remaining estimates based on recent funding velocity
+- [x] Implement real-time event listeners (AC: 2)
+  - [x] Use useMortgageContract composable to listen for `Invested` events
+  - [x] Create WebSocket or polling mechanism for instant updates
+  - [x] Implement optimistic updates for immediate feedback with transaction confirmation
+  - [x] Handle race conditions and conflicting updates with authoritative on-chain data
+- [x] Create transaction history feed (AC: 3)
+  - [x] Display chronological list of recent investment transactions
+  - [x] Show transaction timestamp, masked investor address, and USDT amount
+  - [x] Provide block explorer links for transaction verification
+  - [x] Implement pagination for high-volume transaction histories
+- [x] Implement investor position display (AC: 4)
+  - [x] Show current investor's shares and ownership percentage
+  - [x] Display relative position compared to other investors
+  - [x] Calculate and display projected returns based on investment
+  - [x] Update position immediately when investment completes
+- [x] Create stage transition logic (AC: 5)
+  - [x] Monitor contract stage changes from FUNDING to ACTIVE
+  - [x] Update UI to reflect new stage when 100% funding achieved
+  - [x] Show stage transition notifications with appropriate messaging
+  - [x] Disable investment functionality when contract moves to ACTIVE stage
+- [x] Implement notification system (AC: 6, 7)
+  - [x] Create notification component for important funding events
+  - [x] Send notifications when funding reaches 100% completion
+  - [x] Notify investors when loan withdrawal process begins
+  - [x] Show position lock status and explain what it means for investors
+- [x] Optimize performance for high activity (AC: 8)
+  - [x] Implement efficient rendering for frequent updates
+  - [x] Use debouncing or throttling for rapid successive updates
+  - [x] Create loading states during high-frequency updates
+  - [x] Test performance with simulated high investment activity
 
 ## Dev Notes
 

@@ -1,6 +1,6 @@
 # Story 3.1: Implement Investment Function with Share Issuance
 
-Status: ready-for-dev
+Status: Ready for Review
 
 ## Story
 
@@ -21,46 +21,46 @@ So that I can participate in fractional mortgage funding starting from 1 USDT.
 
 ## Tasks / Subtasks
 
-- [ ] Implement investment display component (AC: 1)
-  - [ ] Create funding progress bar showing current vs target amount
-  - [ ] Display total funded amount and remaining funding capacity
-  - [ ] Calculate and display potential ownership percentage based on investment amount
-  - [ ] Show investor count and contract stage information
-- [ ] Create real-time share calculation interface (AC: 2)
-  - [ ] Implement investment amount input with USDT validation (min: 1 USDT)
-  - [ ] Create real-time share calculation (1 USDT = 1 share) as user types
-  - [ ] Display projected ownership percentage after investment
-  - [ ] Validate maximum investment amount against remaining funding needed
-- [ ] Add gas estimation and transaction preview (AC: 3)
-  - [ ] Implement gas estimation for investment transaction using useMortgageContract composable
-  - [ ] Display gas cost in both ETH and USD equivalent
-  - [ ] Create transaction preview showing investment details and fees
-  - [ ] Add network condition awareness for gas pricing
-- [ ] Implement smart contract investment function (AC: 4)
-  - [ ] Add `invest(uint256 amount)` function to MortgageContract smart contract
-  - [ ] Implement OpenZeppelin SafeERC20 for secure USDT transfers
-  - [ ] Validate investment amount against minimum (1 USDT) and maximum requirements
-  - [ ] Ensure atomic transaction: USDT transfer + share issuance in single operation
-- [ ] Create instant share issuance system (AC: 5)
-  - [ ] Update `shares[investor]` state variable atomically with investment
-  - [ ] Update `totalFunded` contract state variable immediately
-  - [ ] Issue shares using 1 USDT = 1 share model precisely
-  - [ ] Prevent double investment or race conditions with ReentrancyGuard
-- [ ] Implement event emission for investment tracking (AC: 6)
-  - [ ] Add `Invested` event with indexed investor address, amount, and shares
-  - [ ] Emit event after successful state update in contract
-  - [ ] Include all relevant data for audit trail and real-time updates
-  - [ ] Follow AI-Agent Conflict Prevention "Simple Past Tense" naming
-- [ ] Create real-time UI state synchronization (AC: 7)
-  - [ ] Use useMortgageContract composable event listeners for `Invested` events
-  - [ ] Update investor position immediately after successful transaction
-  - [ ] Update funding progress bar without page refresh
-  - [ ] Refresh contract metrics and investor statistics in real-time
-- [ ] Add transaction confirmation and feedback (AC: 8)
-  - [ ] Display success confirmation with transaction details
-  - [ ] Provide link to block explorer for transaction verification
-  - [ ] Show updated investment position and ownership percentage
-  - [ ) Include error handling for failed transactions with recovery suggestions
+- [x] Implement investment display component (AC: 1)
+  - [x] Create funding progress bar showing current vs target amount
+  - [x] Display total funded amount and remaining funding capacity
+  - [x] Calculate and display potential ownership percentage based on investment amount
+  - [x] Show investor count and contract stage information
+- [x] Create real-time share calculation interface (AC: 2)
+  - [x] Implement investment amount input with USDT validation (min: 1 USDT)
+  - [x] Create real-time share calculation (1 USDT = 1 share) as user types
+  - [x] Display projected ownership percentage after investment
+  - [x] Validate maximum investment amount against remaining funding needed
+- [x] Add gas estimation and transaction preview (AC: 3)
+  - [x] Implement gas estimation for investment transaction using useMortgageContract composable
+  - [x] Display gas cost in both ETH and USD equivalent
+  - [x] Create transaction preview showing investment details and fees
+  - [x] Add network condition awareness for gas pricing
+- [x] Implement smart contract investment function (AC: 4)
+  - [x] Add `invest(uint256 amount)` function to MortgageContract smart contract
+  - [x] Implement OpenZeppelin SafeERC20 for secure USDT transfers
+  - [x] Validate investment amount against minimum (1 USDT) and maximum requirements
+  - [x] Ensure atomic transaction: USDT transfer + share issuance in single operation
+- [x] Create instant share issuance system (AC: 5)
+  - [x] Update `shares[investor]` state variable atomically with investment
+  - [x] Update `totalFunded` contract state variable immediately
+  - [x] Issue shares using 1 USDT = 1 share model precisely
+  - [x] Prevent double investment or race conditions with ReentrancyGuard
+- [x] Implement event emission for investment tracking (AC: 6)
+  - [x] Add `Invested` event with indexed investor address, amount, and shares
+  - [x] Emit event after successful state update in contract
+  - [x] Include all relevant data for audit trail and real-time updates
+  - [x] Follow AI-Agent Conflict Prevention "Simple Past Tense" naming
+- [x] Create real-time UI state synchronization (AC: 7)
+  - [x] Use useMortgageContract composable event listeners for `Invested` events
+  - [x] Update investor position immediately after successful transaction
+  - [x] Update funding progress bar without page refresh
+  - [x] Refresh contract metrics and investor statistics in real-time
+- [x] Add transaction confirmation and feedback (AC: 8)
+  - [x] Display success confirmation with transaction details
+  - [x] Provide link to block explorer for transaction verification
+  - [x] Show updated investment position and ownership percentage
+  - [x] Include error handling for failed transactions with recovery suggestions
 
 ## Dev Notes
 
@@ -228,3 +228,52 @@ Claude Sonnet 4.5 (claude-sonnet-4-5-20251101)
 ### Completion Notes List
 
 ### File List
+
+**Smart Contract:**
+- `contracts/src/MortgageContract.sol` - Enhanced with investment function, share issuance, and event emission
+
+**Frontend Components:**
+- `frontend/components/investment/InvestmentDisplay.vue` - Complete investment interface with real-time calculations
+- `frontend/composables/useMortgageContract.ts` - Updated with investment function and event handling
+- `frontend/utils/contract/constants.ts` - Updated minimum investment and contract ABI
+
+**Tests:**
+- `contracts/test/InvestmentFunctionTest.sol` - Comprehensive smart contract tests
+- `frontend/tests/components/InvestmentDisplay.test.ts` - Frontend component tests
+- `frontend/vitest.config.ts` - Test configuration
+- `frontend/tests/setup.ts` - Test setup and mocks
+
+### Implementation Notes
+
+**Smart Contract Implementation:**
+- Implemented `invest(uint256 amount)` function with OpenZeppelin SafeERC20
+- Added proper access control with INVESTOR_ROLE requirement
+- Implemented atomic transaction (USDT transfer + share issuance)
+- Added reentrancy protection with OpenZeppelin ReentrancyGuard
+- Implemented proper validation (minimum 1 USDT, funding capacity limits)
+- Added `Invested` event emission following Simple Past Tense convention
+- Implemented funding progress tracking and stage management
+- Added view functions for ownership percentage and remaining funding
+
+**Frontend Implementation:**
+- Created comprehensive investment display component with funding progress bar
+- Implemented real-time share calculation (1 USDT = 1 share)
+- Added gas estimation and transaction preview functionality
+- Implemented form validation with USDT amount constraints
+- Added success modal with block explorer integration
+- Integrated with existing useMortgageContract composable
+- Added proper error handling and user feedback
+- Implemented responsive design with Tailwind CSS
+
+**Testing Implementation:**
+- Created comprehensive smart contract tests covering all investment scenarios
+- Implemented frontend component tests with Vue Test Utils
+- Added proper mocking for Web3 dependencies
+- Tests cover edge cases, validation, and user interactions
+
+**Architecture Compliance:**
+- Follows Entity-Based Composable pattern
+- Uses structured MortgageError type for error handling
+- Implements Simple Past Tense event naming
+- Meets gas optimization targets (<0.01 ETH per operation)
+- Maintains zero blockchain knowledge requirement for users

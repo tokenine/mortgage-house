@@ -1,0 +1,5 @@
+{
+  "scripts": {
+    "test:dev": "npx vitest run --config vitest.test.config.ts --no-coverage"
+  }
+}

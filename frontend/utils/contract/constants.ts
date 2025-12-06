@@ -4,7 +4,7 @@
 
 // Contract configuration
 export const MORTGAGE_CONFIG = {
-  MIN_INVESTMENT: 100n * 10n ** 6, // 100 USDT minimum
+  MIN_INVESTMENT: 1n * 10n ** 6, // 1 USDT minimum (matching contract)
   MAX_INVESTMENT: 1000000n * 10n ** 6, // 1M USDT maximum
   DECIMALS: 6, // USDT has 6 decimals
   APPROVAL_AMOUNT: BigInt(2) ** 256n - 1n // Maximum approval amount
@@ -92,75 +92,194 @@ export const ERC20_ABI = [
   }
 ]
 
-// Mortgage Contract ABI (mock - will be updated with actual ABI)
+// Mortgage Contract ABI
 export const MORTGAGE_CONTRACT_ABI = [
+  // Read functions
   {
-    constant: true,
     inputs: [],
-    name: 'totalInvested',
-    outputs: [{ name: '', type: 'uint256' }],
-    payable: false,
+    name: 'totalFunded',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
     stateMutability: 'view',
     type: 'function'
   },
   {
-    constant: true,
-    inputs: [],
-    name: 'fundingStage',
-    outputs: [{ name: '', type: 'uint8' }],
-    payable: false,
-    stateMutability: 'view',
-    type: 'function'
-  },
-  {
-    constant: true,
     inputs: [],
     name: 'totalShares',
-    outputs: [{ name: '', type: 'uint256' }],
-    payable: false,
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
     stateMutability: 'view',
     type: 'function'
   },
   {
-    constant: true,
-    inputs: [{ name: 'investor', type: 'address' }],
-    name: 'investorShares',
-    outputs: [{ name: '', type: 'uint256' }],
-    payable: false,
+    inputs: [],
+    name: 'investorCount',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
     stateMutability: 'view',
     type: 'function'
   },
   {
-    constant: false,
-    inputs: [{ name: 'amount', type: 'uint256' }],
+    inputs: [],
+    name: 'repaidPrincipal',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function'
+  },
+  {
+    inputs: [],
+    name: 'repaidInterest',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function'
+  },
+  // Epic 4.1 distribution tracking
+  {
+    inputs: [],
+    name: 'principalRepaid',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function'
+  },
+  {
+    inputs: [],
+    name: 'interestPaid',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function'
+  },
+  {
+    inputs: [{ internalType: 'address', name: '', type: 'address' }],
+    name: 'shares',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function'
+  },
+  {
+    inputs: [],
+    name: 'stage',
+    outputs: [{ internalType: 'uint8', name: '', type: 'uint8' }],
+    stateMutability: 'view',
+    type: 'function'
+  },
+  {
+    inputs: [],
+    name: 'getCurrentStage',
+    outputs: [{ internalType: 'uint8', name: '', type: 'uint8' }],
+    stateMutability: 'view',
+    type: 'function'
+  },
+  {
+    inputs: [],
+    name: 'getRemainingFunding',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function'
+  },
+  {
+    inputs: [],
+    name: 'getFundingProgress',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function'
+  },
+  {
+    inputs: [{ internalType: 'address', name: 'investor', type: 'address' }],
+    name: 'getOwnershipPercentage',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function'
+  },
+
+  // Write functions
+  {
+    inputs: [{ internalType: 'uint256', name: 'amount', type: 'uint256' }],
     name: 'invest',
     outputs: [],
-    payable: false,
     stateMutability: 'nonpayable',
     type: 'function'
   },
   {
-    constant: false,
-    inputs: [],
+    inputs: [{ internalType: 'bool', name: 'principal', type: 'bool' }, { internalType: 'bool', name: 'interest', type: 'bool' }],
     name: 'withdrawPayout',
     outputs: [],
-    payable: false,
+    stateMutability: 'nonpayable',
+    type: 'function'
+  },
+  // Epic 4.1 enhanced withdrawal functions
+  {
+    inputs: [{ internalType: 'uint256', name: 'amount', type: 'uint256' }],
+    name: 'withdrawPrincipal',
+    outputs: [],
     stateMutability: 'nonpayable',
     type: 'function'
   },
   {
-    constant: true,
-    inputs: [],
-    name: 'mortgageDetails',
-    outputs: [
-      { name: 'propertyValue', type: 'uint256' },
-      { name: 'loanAmount', type: 'uint256' },
-      { name: 'interestRate', type: 'uint256' },
-      { name: 'loanTerm', type: 'uint256' },
-      { name: 'fundingTarget', type: 'uint256' },
-      { name: 'fundingDeadline', type: 'uint256' }
-    ],
-    payable: false,
+    inputs: [{ internalType: 'uint256', name: 'amount', type: 'uint256' }],
+    name: 'withdrawInterest',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function'
+  },
+  {
+    inputs: [{ internalType: 'uint256', name: 'principalAmount', type: 'uint256' }, { internalType: 'uint256', name: 'interestAmount', type: 'uint256' }],
+    name: 'withdrawPayout',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function'
+  },
+  {
+    inputs: [{ internalType: 'address', name: 'to', type: 'address' }, { internalType: 'uint256', name: 'sharesAmount', type: 'uint256' }],
+    name: 'transferShares',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function'
+  },
+  {
+    inputs: [{ internalType: 'uint256', name: 'amount', type: 'uint256' }],
+    name: 'withdrawLoan',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function'
+  },
+  {
+    inputs: [{ internalType: 'uint256', name: 'amount', type: 'uint256' }],
+    name: 'depositPrincipal',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function'
+  },
+  {
+    inputs: [{ internalType: 'uint256', name: 'amount', type: 'uint256' }],
+    name: 'depositInterest',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function'
+  },
+
+  // Placeholder functions (will throw "Not implemented yet")
+  {
+    inputs: [{ internalType: 'address', name: 'investor', type: 'address' }],
+    name: 'getEntitledPrincipal',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function'
+  },
+  {
+    inputs: [{ internalType: 'address', name: 'investor', type: 'address' }],
+    name: 'getEntitledInterest',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function'
+  },
+  {
+    inputs: [{ internalType: 'address', name: 'investor', type: 'address' }],
+    name: 'getWithdrawablePrincipal',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function'
+  },
+  {
+    inputs: [{ internalType: 'address', name: 'investor', type: 'address' }],
+    name: 'getWithdrawableInterest',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
     stateMutability: 'view',
     type: 'function'
   }
@@ -223,7 +342,11 @@ export const EVENTS = {
   WITHDRAWN: 'Withdrawn(address investor, uint256 principalAmount, uint256 interestAmount)',
   STAGE_CHANGED: 'StageChanged(uint8 oldStage, uint8 newStage)',
   APPROVAL: 'Approval(address owner, address spender, uint256 value)',
-  TRANSFER: 'Transfer(address from, address to, uint256 value)'
+  TRANSFER: 'Transfer(address from, address to, uint256 value)',
+  // Epic 4.1 distribution events
+  PRINCIPAL_DEPOSITED: 'PrincipalDeposited(address from, uint256 amount, uint256 totalPrincipal, uint256 perShareAmount)',
+  INTEREST_DEPOSITED: 'InterestDeposited(address from, uint256 amount, uint256 totalInterest, uint256 perShareAmount)',
+  PAYOUT_WITHDRAWN: 'PayoutWithdrawn(address to, uint256 principalAmount, uint256 interestAmount)'
 }
 
 // Error messages

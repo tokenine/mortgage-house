@@ -8,12 +8,17 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "type-check": "nuxt typecheck"
+    "type-check": "nuxt typecheck",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
+    "test:components": "bash -c 'mv tsconfig.json tsconfig.json.backup 2>/dev/null || true && npx vitest run --config vitest.test.config.ts && mv tsconfig.json.backup tsconfig.json 2>/dev/null || true'"
   },
   "dependencies": {
     "@tanstack/vue-query": "^5.92.1",
     "@wagmi/connectors": "^7.0.2",
     "@wagmi/core": "^3.0.0",
+    "@wagmi/vue": "^0.0.42",
     "@web3modal/wagmi": "^5.1.11",
     "nuxt": "^3.14.159",
     "viem": "^2.41.2",
@@ -22,7 +27,10 @@
   },
   "devDependencies": {
     "@nuxtjs/tailwindcss": "^6.12.2",
+    "@vitest/ui": "^4.0.15",
+    "@vue/test-utils": "^2.4.6",
     "typescript": "^5.6.3",
+    "vitest": "^4.0.15",
     "vue-tsc": "^2.1.10"
   }
 }

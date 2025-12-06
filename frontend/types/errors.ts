@@ -1,46 +1,62 @@
 /**
  * Mortgage Error Type System
  * Provides structured error handling for mortgage-related operations
+ * Follows architecture specification: {scope: 'CONTRACT'|'FRONTEND'|'NETWORK', type: string, code?: string, message: string}
  */
 
-export enum MortgageErrorCode {
-  // Wallet Connection Errors
-  WALLET_NOT_CONNECTED = 'WALLET_NOT_CONNECTED',
-  WALLET_CONNECTION_FAILED = 'WALLET_CONNECTION_FAILED',
-  WRONG_CHAIN = 'WRONG_CHAIN',
+export type ErrorScope = 'CONTRACT' | 'FRONTEND' | 'NETWORK'
 
-  // Contract Errors
-  CONTRACT_NOT_FOUND = 'CONTRACT_NOT_FOUND',
-  CONTRACT_INTERACTION_FAILED = 'CONTRACT_INTERACTION_FAILED',
-  INSUFFICIENT_FUNDS = 'INSUFFICIENT_FUNDS',
-  INSUFFICIENT_ALLOWANCE = 'INSUFFICIENT_ALLOWANCE',
-  TRANSACTION_FAILED = 'TRANSACTION_FAILED',
-  GAS_ESTIMATION_FAILED = 'GAS_ESTIMATION_FAILED',
+// Contract Error Types
+export const CONTRACT_ERROR_TYPES = {
+  INVALID_STAGE: 'INVALID_STAGE',
+  UNAUTHORIZED: 'UNAUTHORIZED',
+  INSUFFICIENT_FUNDS: 'INSUFFICIENT_FUNDS',
+  INSUFFICIENT_SHARES: 'INSUFFICIENT_SHARES',
+  INVALID_AMOUNT: 'INVALID_AMOUNT',
+  CONTRACT_PAUSED: 'CONTRACT_PAUSED',
+  REENTRANCY_DETECTED: 'REENTRANCY_DETECTED',
+  MATH_OVERFLOW: 'MATH_OVERFLOW',
+  INSUFFICIENT_ALLOWANCE: 'INSUFFICIENT_ALLOWANCE'
+} as const
 
-  // Investment Errors
-  INVESTMENT_AMOUNT_TOO_LOW = 'INVESTMENT_AMOUNT_TOO_LOW',
-  INVESTMENT_AMOUNT_TOO_HIGH = 'INVESTMENT_AMOUNT_TOO_HIGH',
-  INVESTMENT_FAILED = 'INVESTMENT_FAILED',
-  SHARE_ALLOCATION_FAILED = 'SHARE_ALLOCATION_FAILED',
+// Frontend Error Types
+export const FRONTEND_ERROR_TYPES = {
+  INVALID_INPUT: 'INVALID_INPUT',
+  WALLET_NOT_CONNECTED: 'WALLET_NOT_CONNECTED',
+  WRONG_NETWORK: 'WRONG_NETWORK',
+  TRANSACTION_REJECTED: 'TRANSACTION_REJECTED',
+  MISSING_PARAMETERS: 'MISSING_PARAMETERS',
+  FORM_VALIDATION_ERROR: 'FORM_VALIDATION_ERROR',
+  WALLET_CONNECTION_FAILED: 'WALLET_CONNECTION_FAILED',
+  USER_REJECTED_TRANSACTION: 'USER_REJECTED_TRANSACTION',
+  TRANSACTION_CANCELLED: 'TRANSACTION_CANCELLED',
+  VALIDATION_ERROR: 'VALIDATION_ERROR'
+} as const
 
-  // Data Fetching Errors
-  FETCHING_CONTRACT_DATA_FAILED = 'FETCHING_CONTRACT_DATA_FAILED',
-  INVALID_CONTRACT_DATA = 'INVALID_CONTRACT_DATA',
-  RATE_LIMIT_EXCEEDED = 'RATE_LIMIT_EXCEEDED',
+// Network Error Types
+export const NETWORK_ERROR_TYPES = {
+  NETWORK_CONNECTION_ERROR: 'NETWORK_CONNECTION_ERROR',
+  RPC_TIMEOUT: 'RPC_TIMEOUT',
+  NODE_UNAVAILABLE: 'NODE_UNAVAILABLE',
+  RATE_LIMIT_EXCEEDED: 'RATE_LIMIT_EXCEEDED',
+  NETWORK_SWITCH_REQUIRED: 'NETWORK_SWITCH_REQUIRED',
+  GAS_PRICE_ERROR: 'GAS_PRICE_ERROR',
+  NETWORK_ERROR: 'NETWORK_ERROR',
+  RPC_ERROR: 'RPC_ERROR',
+  FETCHING_CONTRACT_DATA_FAILED: 'FETCHING_CONTRACT_DATA_FAILED',
+  INVALID_CONTRACT_DATA: 'INVALID_CONTRACT_DATA'
+} as const
 
-  // Network Errors
-  NETWORK_ERROR = 'NETWORK_ERROR',
-  NETWORK_TIMEOUT = 'NETWORK_TIMEOUT',
-  RPC_ERROR = 'RPC_ERROR',
+export type ContractErrorType = typeof CONTRACT_ERROR_TYPES[keyof typeof CONTRACT_ERROR_TYPES]
+export type FrontendErrorType = typeof FRONTEND_ERROR_TYPES[keyof typeof FRONTEND_ERROR_TYPES]
+export type NetworkErrorType = typeof NETWORK_ERROR_TYPES[keyof typeof NETWORK_ERROR_TYPES]
+export type ErrorType = ContractErrorType | FrontendErrorType | NetworkErrorType
 
-  // User Interface Errors
-  USER_REJECTED_TRANSACTION = 'USER_REJECTED_TRANSACTION',
-  TRANSACTION_CANCELLED = 'TRANSACTION_CANCELLED',
-
-  // Generic Errors
-  UNKNOWN_ERROR = 'UNKNOWN_ERROR',
-  VALIDATION_ERROR = 'VALIDATION_ERROR',
-  CONFIGURATION_ERROR = 'CONFIGURATION_ERROR'
+export interface MortgageError {
+  scope: ErrorScope
+  type: ErrorType
+  code?: string
+  message: string
 }
 
 export enum MortgageErrorSeverity {
@@ -68,69 +84,41 @@ export interface MortgageErrorContext {
   allowance?: string;
 }
 
-export class MortgageError extends Error {
-  public readonly code: MortgageErrorCode
+export class StructuredMortgageError implements MortgageError {
+  public readonly scope: ErrorScope
+  public readonly type: ErrorType
+  public readonly code?: string
+  public readonly message: string
   public readonly severity: MortgageErrorSeverity
   public readonly context: MortgageErrorContext
   public readonly timestamp: number
   public readonly recoverable: boolean
 
   constructor(
-    code: MortgageErrorCode,
+    scope: ErrorScope,
+    type: ErrorType,
     message: string,
+    code?: string,
     severity: MortgageErrorSeverity = MortgageErrorSeverity.MEDIUM,
     context: MortgageErrorContext = {},
     recoverable: boolean = true
   ) {
-    super(message)
-    this.name = 'MortgageError'
+    this.scope = scope
+    this.type = type
     this.code = code
+    this.message = message
     this.severity = severity
     this.context = context
     this.timestamp = Date.now()
     this.recoverable = recoverable
-
-    // Maintains proper stack trace for where our error was thrown
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, MortgageError)
-    }
   }
 
   /**
    * Create a user-friendly error message
    */
   getUserMessage(): string {
-    switch (this.code) {
-      case MortgageErrorCode.WALLET_NOT_CONNECTED:
-        return 'Please connect your wallet to continue'
-
-      case MortgageErrorCode.WRONG_CHAIN:
-        return 'Please switch to the correct network (Ethereum Mainnet)'
-
-      case MortgageErrorCode.INSUFFICIENT_FUNDS:
-        return 'You don\'t have enough funds to complete this transaction'
-
-      case MortgageErrorCode.INSUFFICIENT_ALLOWANCE:
-        return 'Please approve the contract to spend your USDT tokens first'
-
-      case MortgageErrorCode.INVESTMENT_AMOUNT_TOO_LOW:
-        return 'Minimum investment amount is 100 USDT'
-
-      case MortgageErrorCode.INVESTMENT_AMOUNT_TOO_HIGH:
-        return 'Investment amount exceeds the maximum allowed'
-
-      case MortgageErrorCode.USER_REJECTED_TRANSACTION:
-        return 'Transaction was cancelled in your wallet'
-
-      case MortgageErrorCode.NETWORK_ERROR:
-        return 'Network connection error. Please check your internet connection and try again'
-
-      case MortgageErrorCode.TRANSACTION_FAILED:
-        return 'Transaction failed. Please try again or contact support if the problem persists'
-
-      default:
-        return this.message
-    }
+    // Return the main message which should already be user-friendly
+    return this.message
   }
 
   /**
@@ -139,38 +127,38 @@ export class MortgageError extends Error {
   shouldRetry(): boolean {
     if (!this.recoverable) return false
 
-    const retryableCodes = [
-      MortgageErrorCode.NETWORK_ERROR,
-      MortgageErrorCode.NETWORK_TIMEOUT,
-      MortgageErrorCode.RPC_ERROR,
-      MortgageErrorCode.RATE_LIMIT_EXCEEDED,
-      MortgageErrorCode.GAS_ESTIMATION_FAILED
+    const retryableTypes = [
+      NETWORK_ERROR_TYPES.NETWORK_CONNECTION_ERROR,
+      NETWORK_ERROR_TYPES.RPC_TIMEOUT,
+      NETWORK_ERROR_TYPES.NODE_UNAVAILABLE,
+      NETWORK_ERROR_TYPES.RATE_LIMIT_EXCEEDED,
+      NETWORK_ERROR_TYPES.GAS_PRICE_ERROR
     ]
 
-    return retryableCodes.includes(this.code)
+    return retryableTypes.includes(this.type as NetworkErrorType)
   }
 
   /**
    * Get suggested action for user
    */
   getSuggestedAction(): string | null {
-    switch (this.code) {
-      case MortgageErrorCode.WALLET_NOT_CONNECTED:
+    switch (this.type) {
+      case FRONTEND_ERROR_TYPES.WALLET_NOT_CONNECTED:
         return 'Connect your wallet using the wallet connect button'
 
-      case MortgageErrorCode.WRONG_CHAIN:
+      case FRONTEND_ERROR_TYPES.WRONG_NETWORK:
         return 'Switch network in your wallet to Ethereum Mainnet'
 
-      case MortgageErrorCode.INSUFFICIENT_ALLOWANCE:
+      case CONTRACT_ERROR_TYPES.INSUFFICIENT_ALLOWANCE:
         return 'Click "Approve" to allow the contract to spend your USDT'
 
-      case MortgageErrorCode.INVESTMENT_AMOUNT_TOO_LOW:
-        return 'Increase your investment amount to at least 100 USDT'
+      case CONTRACT_ERROR_TYPES.INVALID_AMOUNT:
+        return 'Please enter a valid investment amount'
 
-      case MortgageErrorCode.GAS_ESTIMATION_FAILED:
+      case NETWORK_ERROR_TYPES.GAS_PRICE_ERROR:
         return 'Try again in a few moments when network is less congested'
 
-      case MortgageErrorCode.RATE_LIMIT_EXCEEDED:
+      case NETWORK_ERROR_TYPES.RATE_LIMIT_EXCEEDED:
         return 'Please wait a few minutes before trying again'
 
       default:
@@ -183,53 +171,70 @@ export class MortgageError extends Error {
    */
   toJSON() {
     return {
-      name: this.name,
+      scope: this.scope,
+      type: this.type,
       code: this.code,
       message: this.message,
-      userMessage: this.getUserMessage(),
       severity: this.severity,
       context: this.context,
       timestamp: this.timestamp,
       recoverable: this.recoverable,
       shouldRetry: this.shouldRetry(),
-      suggestedAction: this.getSuggestedAction(),
-      stack: this.stack
+      suggestedAction: this.getSuggestedAction()
     }
   }
 
   /**
    * Create from generic error
    */
-  static fromError(error: any, context: MortgageErrorContext = {}): MortgageError {
-    // If it's already a MortgageError, return as is
-    if (error instanceof MortgageError) {
+  static fromError(error: any, context: MortgageErrorContext = {}): StructuredMortgageError {
+    // If it's already a StructuredMortgageError, return as is
+    if (error instanceof StructuredMortgageError) {
       return error
     }
 
     // Handle MetaMask errors
     if (error.code === 4001) {
-      return new MortgageError(
-        MortgageErrorCode.USER_REJECTED_TRANSACTION,
-        'User rejected the transaction',
+      return new StructuredMortgageError(
+        'FRONTEND',
+        FRONTEND_ERROR_TYPES.USER_REJECTED_TRANSACTION,
+        'Transaction was cancelled in your wallet',
+        error.code?.toString(),
         MortgageErrorSeverity.LOW,
         context
       )
     }
 
     if (error.code === -32603) {
-      return new MortgageError(
-        MortgageErrorCode.RPC_ERROR,
-        'Internal JSON-RPC error',
+      return new StructuredMortgageError(
+        'NETWORK',
+        NETWORK_ERROR_TYPES.RPC_ERROR,
+        'Network request failed. Please try again.',
+        error.code?.toString(),
         MortgageErrorSeverity.HIGH,
         context
       )
     }
 
     // Handle network errors
-    if (error.message?.includes('network')) {
-      return new MortgageError(
-        MortgageErrorCode.NETWORK_ERROR,
-        'Network connection error',
+    if (error.message?.includes('network') || error.message?.includes('fetch')) {
+      return new StructuredMortgageError(
+        'NETWORK',
+        NETWORK_ERROR_TYPES.NETWORK_CONNECTION_ERROR,
+        'Network connection error. Please check your internet connection and try again',
+        error.code?.toString(),
+        MortgageErrorSeverity.MEDIUM,
+        context
+      )
+    }
+
+    // Handle timeout errors
+    if (error.message?.includes('timeout')) {
+      return new StructuredMortgageError(
+        'NETWORK',
+        NETWORK_ERROR_TYPES.RPC_TIMEOUT,
+        'Request timed out. Please try again.',
+        error.code?.toString(),
         MortgageErrorSeverity.MEDIUM,
         context
       )
@@ -237,21 +242,144 @@ export class MortgageError extends Error {
 
     // Handle contract revert errors
     if (error.message?.includes('revert')) {
-      return new MortgageError(
-        MortgageErrorCode.CONTRACT_INTERACTION_FAILED,
-        'Contract execution reverted',
+      return new StructuredMortgageError(
+        'CONTRACT',
+        CONTRACT_ERROR_TYPES.INVALID_AMOUNT,
+        'Transaction failed. Please check your input and try again.',
+        error.code?.toString(),
         MortgageErrorSeverity.HIGH,
         context
       )
     }
 
+    // Handle insufficient funds
+    if (error.message?.includes('insufficient funds') || error.message?.includes('transfer amount exceeds balance')) {
+      return new StructuredMortgageError(
+        'CONTRACT',
+        CONTRACT_ERROR_TYPES.INSUFFICIENT_FUNDS,
+        'You do not have enough USDT tokens for this transaction.',
+        error.code?.toString(),
+        MortgageErrorSeverity.MEDIUM,
+        context
+      )
+    }
+
+    // Handle insufficient allowance
+    if (error.message?.includes('insufficient allowance')) {
+      return new StructuredMortgageError(
+        'CONTRACT',
+        CONTRACT_ERROR_TYPES.INSUFFICIENT_ALLOWANCE,
+        'Please approve USDT spending first before continuing.',
+        error.code?.toString(),
+        MortgageErrorSeverity.MEDIUM,
+        context
+      )
+    }
+
     // Default fallback
-    return new MortgageError(
-      MortgageErrorCode.UNKNOWN_ERROR,
-      error.message || 'An unknown error occurred',
+    return new StructuredMortgageError(
+      'FRONTEND',
+      FRONTEND_ERROR_TYPES.VALIDATION_ERROR,
+      error.message || 'An unexpected error occurred. Please try again.',
+      error.code?.toString(),
       MortgageErrorSeverity.MEDIUM,
       context
     )
+  }
+}
+
+/**
+ * Contract error translation mapping dictionary
+ * Maps technical contract errors to user-friendly messages
+ */
+export const CONTRACT_ERROR_MAP: Record<string, Omit<MortgageError, 'code'>> = {
+  // Investment errors
+  'ERC20: transfer amount exceeds balance': {
+    scope: 'CONTRACT',
+    type: CONTRACT_ERROR_TYPES.INSUFFICIENT_FUNDS,
+    message: 'You do not have enough USDT tokens for this investment.'
+  },
+  'ERC20: insufficient allowance': {
+    scope: 'CONTRACT',
+    type: CONTRACT_ERROR_TYPES.INSUFFICIENT_ALLOWANCE,
+    message: 'Please approve USDT spending first before investing.'
+  },
+  'ERC20: transfer amount must be greater than zero': {
+    scope: 'CONTRACT',
+    type: CONTRACT_ERROR_TYPES.INVALID_AMOUNT,
+    message: 'Investment amount must be greater than zero.'
+  },
+
+  // Stage-based errors
+  'Contract not in funding stage': {
+    scope: 'CONTRACT',
+    type: CONTRACT_ERROR_TYPES.INVALID_STAGE,
+    message: 'This investment opportunity is no longer available.'
+  },
+  'Invalid stage for operation': {
+    scope: 'CONTRACT',
+    type: CONTRACT_ERROR_TYPES.INVALID_STAGE,
+    message: 'This operation is not available in the current stage.'
+  },
+
+  // Permission errors
+  'Caller is not operator': {
+    scope: 'CONTRACT',
+    type: CONTRACT_ERROR_TYPES.UNAUTHORIZED,
+    message: 'Only authorized operators can perform this action.'
+  },
+  'Ownable: caller is not the owner': {
+    scope: 'CONTRACT',
+    type: CONTRACT_ERROR_TYPES.UNAUTHORIZED,
+    message: 'Only the contract owner can perform this action.'
+  },
+
+  // Share errors
+  'Insufficient shares': {
+    scope: 'CONTRACT',
+    type: CONTRACT_ERROR_TYPES.INSUFFICIENT_SHARES,
+    message: 'You do not have enough shares for this withdrawal.'
+  },
+  'Transfer amount exceeds balance': {
+    scope: 'CONTRACT',
+    type: CONTRACT_ERROR_TYPES.INSUFFICIENT_SHARES,
+    message: 'You do not have enough shares to transfer.'
+  },
+
+  // Amount validation errors
+  'Amount must be greater than zero': {
+    scope: 'CONTRACT',
+    type: CONTRACT_ERROR_TYPES.INVALID_AMOUNT,
+    message: 'Amount must be greater than zero.'
+  },
+  'Amount exceeds maximum': {
+    scope: 'CONTRACT',
+    type: CONTRACT_ERROR_TYPES.INVALID_AMOUNT,
+    message: 'Amount exceeds the maximum allowed limit.'
+  },
+
+  // Contract state errors
+  'Contract is paused': {
+    scope: 'CONTRACT',
+    type: CONTRACT_ERROR_TYPES.CONTRACT_PAUSED,
+    message: 'Contract is currently paused. Please try again later.'
+  },
+  'ReentrancyGuard: reentrant call': {
+    scope: 'CONTRACT',
+    type: CONTRACT_ERROR_TYPES.REENTRANCY_DETECTED,
+    message: 'Security alert: Reentrancy detected. Transaction rejected.'
+  },
+
+  // Math errors
+  'Math: overflow': {
+    scope: 'CONTRACT',
+    type: CONTRACT_ERROR_TYPES.MATH_OVERFLOW,
+    message: 'Calculation overflow detected. Please use a smaller amount.'
+  },
+  'Math: underflow': {
+    scope: 'CONTRACT',
+    type: CONTRACT_ERROR_TYPES.MATH_OVERFLOW,
+    message: 'Calculation error detected. Please check your inputs.'
   }
 }
 
@@ -265,12 +393,12 @@ export class MortgageErrorHandler {
   static async handleAsync<T>(
     asyncFn: () => Promise<T>,
     context: MortgageErrorContext = {}
-  ): Promise<[T | null, MortgageError | null]> {
+  ): Promise<[T | null, StructuredMortgageError | null]> {
     try {
       const result = await asyncFn()
       return [result, null]
     } catch (error) {
-      const mortgageError = MortgageError.fromError(error, context)
+      const mortgageError = StructuredMortgageError.fromError(error, context)
       return [null, mortgageError]
     }
   }
@@ -278,7 +406,7 @@ export class MortgageErrorHandler {
   /**
    * Log error for debugging
    */
-  static log(error: MortgageError, extra?: Record<string, any>): void {
+  static log(error: StructuredMortgageError, extra?: Record<string, any>): void {
     console.error('MortgageError:', {
       ...error.toJSON(),
       ...extra
@@ -288,8 +416,67 @@ export class MortgageErrorHandler {
   /**
    * Check if error should be reported to monitoring service
    */
-  static shouldReport(error: MortgageError): boolean {
+  static shouldReport(error: StructuredMortgageError): boolean {
     return error.severity === MortgageErrorSeverity.CRITICAL ||
            error.severity === MortgageErrorSeverity.HIGH
   }
+
+  /**
+   * Translate contract error message to user-friendly format
+   */
+  static translateContractError(errorMessage: string): Omit<MortgageError, 'code'> | null {
+    // Check for exact matches first
+    if (CONTRACT_ERROR_MAP[errorMessage]) {
+      return CONTRACT_ERROR_MAP[errorMessage]
+    }
+
+    // Check for partial matches
+    for (const [key, value] of Object.entries(CONTRACT_ERROR_MAP)) {
+      if (errorMessage.includes(key)) {
+        return value
+      }
+    }
+
+    // Fallback to generic contract error
+    return {
+      scope: 'CONTRACT',
+      type: CONTRACT_ERROR_TYPES.INVALID_AMOUNT,
+      message: 'Transaction failed. Please check your inputs and try again.'
+    }
+  }
+
+  /**
+   * Create structured error from contract error message
+   */
+  static fromContractError(
+    errorMessage: string,
+    code?: string,
+    context: MortgageErrorContext = {}
+  ): StructuredMortgageError {
+    const translated = this.translateContractError(errorMessage)
+
+    if (translated) {
+      return new StructuredMortgageError(
+        translated.scope,
+        translated.type,
+        translated.message,
+        code,
+        MortgageErrorSeverity.HIGH,
+        context
+      )
+    }
+
+    // Fallback
+    return new StructuredMortgageError(
+      'CONTRACT',
+      CONTRACT_ERROR_TYPES.INVALID_AMOUNT,
+      errorMessage,
+      code,
+      MortgageErrorSeverity.HIGH,
+      context
+    )
+  }
 }
+
+// Create type alias for backward compatibility
+export type MortgageError = StructuredMortgageError
