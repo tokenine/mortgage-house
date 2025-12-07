@@ -325,10 +325,4 @@ export function getDefaultTransitionReasons(fromStage: Stage, toStage: Stage): s
   return reasonMap[`${fromStage}-${toStage}`] || ['Manual stage transition']
 }
 
-/**
- * Export stage constants and utilities
- */
-export {
-  Stage,
-  STAGE_CONFIGS
-}
+// Stage constants and utilities are already exported above

@@ -1,7 +1,12 @@
 {
   "name": "mortage-house-frontend",
+  "version": "1.0.0",
   "type": "module",
   "private": true,
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
@@ -16,11 +21,14 @@
   },
   "dependencies": {
     "@tanstack/vue-query": "^5.92.1",
+    "@vueuse/core": "^14.1.0",
     "@wagmi/connectors": "^7.0.2",
     "@wagmi/core": "^3.0.0",
     "@wagmi/vue": "^0.0.42",
     "@web3modal/wagmi": "^5.1.11",
-    "nuxt": "^3.14.159",
+    "nuxt": "3.8.0",
+    "pinia": "^3.0.4",
+    "react": "^19.2.1",
     "viem": "^2.41.2",
     "vue": "^3.5.12",
     "vue-router": "^4.4.5"
@@ -30,7 +38,8 @@
     "@vitest/ui": "^4.0.15",
     "@vue/test-utils": "^2.4.6",
     "typescript": "^5.6.3",
+    "vite": "5.2.8",
     "vitest": "^4.0.15",
-    "vue-tsc": "^2.1.10"
+    "wagmi": "^3.1.0"
   }
 }

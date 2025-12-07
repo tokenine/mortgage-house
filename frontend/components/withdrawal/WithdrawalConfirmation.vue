@@ -164,7 +164,8 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useAccount, useClipboard } from '#imports'
+import { useAccount } from '@wagmi/vue'
+import { useClipboard } from '@vueuse/core'
 import { formatUSDT } from '~/utils/contract/constants'
 
 // Props

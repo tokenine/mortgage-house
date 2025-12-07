@@ -130,15 +130,6 @@ const viewContractDetails = (contractAddress: string): void => {
   router.push(`/operator/contracts/${contractAddress}`)
 }
 
-const startContractFunding = async (contractAddress: string): Promise<void> => {
-  try {
-    await startContractFunding(contractAddress as `0x${string}`)
-    await refreshContracts()
-  } catch (error) {
-    console.error('Failed to start funding:', error)
-  }
-}
-
 const refreshContracts = async (): Promise<void> => {
   try {
     await refreshData()

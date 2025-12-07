@@ -381,7 +381,7 @@ const loadMore = () => {
 }
 
 .transaction-item:hover {
-  @apply bg-gray-50 dark:bg-gray-750;
+  @apply bg-gray-50 dark:bg-gray-700;
 }
 
 .pagination {

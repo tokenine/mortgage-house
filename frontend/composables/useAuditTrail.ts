@@ -4,7 +4,7 @@
  */
 
 import { ref, computed, readonly, watch } from 'vue'
-import { useAccount } from '@wagmi/vue'
+import { useAccount, usePublicClient } from '@wagmi/vue'
 import type {
   AuditEntry,
   AuditFilters,
@@ -38,6 +38,7 @@ export function useAuditTrail() {
 
   // Composables
   const { address, chainId } = useAccount()
+  const publicClient = usePublicClient()
   const { handleError } = useErrorHandler()
   const realtimeStore = useRealtimeStore()
   const auditStore = useAuditStore()
@@ -110,7 +111,7 @@ export function useAuditTrail() {
       ])
 
       // Apply filters and sorting
-      const filteredData = applyFilters(mergedData, activeFilters)
+      const filteredData = applyFiltersToData(mergedData, activeFilters)
       const sortedData = sortAuditData(filteredData, pagination.sortBy, pagination.sortOrder)
 
       // Apply pagination
@@ -177,9 +178,20 @@ export function useAuditTrail() {
    */
   const fetchTransactionHistory = async (filters: AuditFilters): Promise<AuditEntry[]> => {
     try {
-      // In a real implementation, fetch from transaction tracking system
-      // For now, return empty array
-      return []
+      // Fetch from real-time store transaction history
+      const historyEvents = realtimeStore.eventHistory
+        .filter(event => {
+          const eventDate = new Date(event.timestamp)
+          return (!filters.dateRange ||
+            (eventDate >= filters.dateRange!.start && eventDate <= filters.dateRange!.end)) &&
+            (!filters.eventTypes ||
+              filters.eventTypes.includes(mapRealtimeEventToAuditType(event.type))) &&
+            (!filters.contracts ||
+              filters.contracts.includes(event.contractAddress.toLowerCase()))
+        })
+        .map(event => convertRealtimeEventToAuditEntry(event, event.contractAddress))
+
+      return historyEvents
     } catch (error) {
       console.error('Error fetching transaction history:', error)
       return []
@@ -191,9 +203,17 @@ export function useAuditTrail() {
    */
   const fetchOperationalLogs = async (filters: AuditFilters): Promise<AuditEntry[]> => {
     try {
-      // In a real implementation, fetch from operational metrics system
-      // For now, return empty array
-      return []
+      // Fetch from audit store for operational logs
+      const operationalEntries = auditStore.auditEntries.filter(entry =>
+        entry.metadata.source === 'operational_log' &&
+        (!filters.dateRange ||
+          (entry.timestamp >= filters.dateRange!.start.getTime() &&
+           entry.timestamp <= filters.dateRange!.end.getTime())) &&
+        (!filters.eventTypes ||
+          filters.eventTypes.includes(entry.eventType))
+      )
+
+      return operationalEntries
     } catch (error) {
       console.error('Error fetching operational logs:', error)
       return []
@@ -451,9 +471,9 @@ export function useAuditTrail() {
   }
 
   /**
-   * Apply filters to audit data
+   * Apply filters to audit data (internal helper)
    */
-  const applyFilters = (data: AuditEntry[], activeFilters: AuditFilters): AuditEntry[] => {
+  const applyFiltersToData = (data: AuditEntry[], activeFilters: AuditFilters): AuditEntry[] => {
     let filtered = [...data]
 
     // Date range filter
@@ -559,13 +579,37 @@ export function useAuditTrail() {
 
   // Mock implementations for missing functions
   const fetchTransactionDetails = async (hash: string): Promise<any> => {
-    // Mock implementation
-    return {
-      hash,
-      blockNumber: BigInt(12345),
-      timestamp: Date.now(),
-      from: '0x...',
-      status: 'success'
+    try {
+      // Use publicClient to fetch real transaction details
+      const transaction = await publicClient.getTransaction({
+        hash: hash as `0x${string}`
+      })
+
+      if (!transaction) {
+        throw new Error(`Transaction ${hash} not found`)
+      }
+
+      return {
+        hash: transaction.hash,
+        blockNumber: transaction.blockNumber || 0n,
+        blockHash: transaction.blockHash,
+        transactionIndex: transaction.transactionIndex,
+        from: transaction.from,
+        to: transaction.to,
+        value: transaction.value,
+        gasUsed: 0n, // Will be populated from receipt
+        gasPrice: transaction.gasPrice,
+        maxFeePerGas: transaction.maxFeePerGas,
+        maxPriorityFeePerGas: transaction.maxPriorityFeePerGas,
+        input: transaction.input,
+        nonce: transaction.nonce,
+        timestamp: Date.now(), // Will be updated from block
+        status: 'pending',
+        confirmations: 0
+      }
+    } catch (error) {
+      console.error(`Error fetching transaction ${hash}:`, error)
+      throw error
     }
   }
 

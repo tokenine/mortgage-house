@@ -3,7 +3,7 @@
  * Epic 6.1 - Real-time Contract State Synchronization
  */
 
-import { ref, readonly, onUnmounted, nextTick, type Ref } from 'vue'
+import { ref, readonly, onUnmounted, nextTick, computed, type Ref } from 'vue'
 import { useWebSocket, type UseWebSocketReturn } from '@vueuse/core'
 import { useAccount, usePublicClient } from '@wagmi/vue'
 import { StructuredMortgageError, MortgageError, MortgageErrorSeverity } from '~/types/errors'
@@ -101,8 +101,10 @@ import { MORTGAGE_CONTRACT_ABI } from '~/utils/contract/constants'
       rollbacksTriggered: 0,
       averageLatency: 0,
       lastEventTime: 0,
-      connectionUptime: 0
+      connectionUptime: 0,
+      errorCount: 0
     })
+    const performanceMetrics = ref<Map<string, number>>(new Map())
 
     // WebSocket connection
     let wsConnection: UseWebSocketReturn<any> | null = null
@@ -803,17 +805,46 @@ import { MORTGAGE_CONTRACT_ABI } from '~/utils/contract/constants'
     // RETURN API
     // ========================================
 
+    // Performance monitoring
+    const recordPerformanceMetric = (operation: string, duration: number) => {
+      const current = performanceMetrics.value.get(operation) || 0
+      performanceMetrics.value.set(operation, current + duration)
+    }
+
+    const getAverageLatency = () => {
+      const latencyData = Array.from(performanceMetrics.value.entries())
+        .filter(([key]) => key.includes('latency'))
+        .map(([, value]) => value)
+
+      return latencyData.length > 0
+        ? latencyData.reduce((sum, val) => sum + val, 0) / latencyData.length
+        : 0
+    }
+
+    const checkPerformanceThresholds = () => {
+      const avgLatency = getAverageLatency()
+      const errorRate = syncMetrics.value.errorCount / Math.max(1, syncMetrics.value.eventsProcessed)
+
+      return {
+        latencyOk: avgLatency < 1000, // < 1 second
+        errorRateOk: errorRate < 0.01, // < 1%
+        throughputOk: syncMetrics.value.eventsProcessed > 0
+      }
+    }
+
     return {
       // State
       connectionStatus: readonly(connectionStatus),
       lastSyncTime: readonly(lastSyncTime),
       syncErrors: readonly(syncErrors),
       syncMetrics: readonly(syncMetrics),
+      performanceMetrics: readonly(performanceMetrics),
 
       // Computed
       isConnected: computed(() => connectionStatus.value === 'connected'),
       isHealthy: computed(() => isConnectionHealthy()),
       connectionQuality: computed(() => getConnectionQuality()),
+      performanceStatus: computed(() => checkPerformanceThresholds()),
 
       // Connection management
       establishConnection,
@@ -833,6 +864,10 @@ import { MORTGAGE_CONTRACT_ABI } from '~/utils/contract/constants'
       // Error handling
       clearSyncError,
       clearAllSyncErrors,
+
+      // Performance monitoring
+      recordPerformanceMetric,
+      getAverageLatency,
 
       // Utilities
       requestInitialSync,

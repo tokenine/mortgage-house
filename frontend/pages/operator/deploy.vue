@@ -305,15 +305,6 @@ const viewContractDetails = (contractAddress: string) => {
   router.push(`/operator/contracts/${contractAddress}`)
 }
 
-const startContractFunding = async (contractAddress: string) => {
-  try {
-    await startContractFunding(contractAddress as `0x${string}`)
-    await refreshData()
-  } catch (error) {
-    console.error('Failed to start funding:', error)
-  }
-}
-
 const formatAddress = (address?: string): string => {
   if (!address) return 'N/A'
   return `${address.slice(0, 6)}...${address.slice(-4)}`
@@ -363,6 +354,10 @@ definePageMeta({
 </script>
 
 <style scoped>
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
 .deploy-page {
   @apply space-y-6 p-6;
 }

@@ -124,7 +124,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useClipboard } from '#imports'
+import { useClipboard } from '@vueuse/core'
 import {
   type Transaction,
   formatTransactionType,

@@ -173,7 +173,6 @@ const emit = defineEmits<{
 }>()
 
 // State
-const showHighGasAlert = ref(false)
 const showPriceDropAlert = ref(false)
 const lastGasPrice = ref<bigint | null>(null)
 const priceHistory = ref<Array<{ price: bigint; timestamp: number }>>([])
@@ -280,12 +279,13 @@ const alertActions = computed(() => [
   },
   {
     label: 'Use Slower Speed',
+    color: 'blue' as const,
     click: () => emit('use-slower-speed')
   },
   {
     label: 'Dismiss',
     variant: 'ghost' as const,
-    click: () => alertDismissed.value = true
+    click: () => { alertDismissed.value = true }
   }
 ])
 
