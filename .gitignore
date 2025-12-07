@@ -79,7 +79,20 @@ jspm_packages/
 .parcel-cache
 
 # Next.js build output
-.next
+.next/
+out/
+build/
+.vercel/
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Yarn
+.yarn/cache
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
 
 # Nuxt.js build / generate output
 .nuxt
