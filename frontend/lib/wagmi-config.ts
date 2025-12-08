@@ -1,9 +1,19 @@
 import { createConfig, http } from "wagmi"
 import { anvil } from "wagmi/chains"
 import { injected, mock } from "wagmi/connectors"
+import { defineChain } from "viem"
+
+export const customChain = defineChain({
+    id: 7117,
+    name: 'Custom Testnet',
+    nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+    rpcUrls: {
+        default: { http: ['https://rpc.0xl3.com'] },
+    },
+})
 
 export const config = createConfig({
-    chains: [anvil],
+    chains: [customChain, anvil],
     connectors: [
         injected(),
         mock({
@@ -11,6 +21,7 @@ export const config = createConfig({
         }),
     ],
     transports: {
+        [customChain.id]: http(),
         [anvil.id]: http(),
     },
 })
