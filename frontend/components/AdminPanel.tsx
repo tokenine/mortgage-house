@@ -1,16 +1,18 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi"
+import { useAccount, useReadContract, useWriteContract } from "wagmi"
 import { parseUnits } from "viem"
 import { CONTRACTS } from "@/lib/contracts"
 import { useMortgageBond } from "@/hooks/useMortgageBond"
+import { useTransactionWithToast } from "@/hooks/useTransactionState"
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Loader2, ShieldAlert } from "lucide-react"
+import { Loader2, ShieldAlert, AlertCircle } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export function AdminPanel() {
     const { address } = useAccount()
@@ -26,11 +28,11 @@ export function AdminPanel() {
     const { writeContract: writeDistributePrin, data: prinTx, isPending: isPrinPending } = useWriteContract()
     const { writeContract: writeWithdraw, data: withTx, isPending: isWithPending } = useWriteContract()
 
-    // Wait
-    const { isSuccess: isApproveSuccess, isLoading: isApproveConfirming } = useWaitForTransactionReceipt({ hash: approveTx })
-    const { isSuccess: isIntSuccess, isLoading: isIntConfirming } = useWaitForTransactionReceipt({ hash: intTx })
-    const { isSuccess: isPrinSuccess, isLoading: isPrinConfirming } = useWaitForTransactionReceipt({ hash: prinTx })
-    const { isSuccess: isWithSuccess, isLoading: isWithConfirming } = useWaitForTransactionReceipt({ hash: withTx })
+    // Transaction states
+    const approveState = useTransactionWithToast(approveTx, "Approving tokens...")
+    const intState = useTransactionWithToast(intTx, "Distributing interest...", "Interest distributed successfully!")
+    const prinState = useTransactionWithToast(prinTx, "Distributing principal...", "Principal distributed successfully!")
+    const withState = useTransactionWithToast(withTx, "Withdrawing principal...", "Principal withdrawn successfully!")
 
     // Read Allowance
     const { data: allowance, refetch: refetchAllowance } = useReadContract({
@@ -41,13 +43,13 @@ export function AdminPanel() {
 
     // Effects
     useEffect(() => {
-        if (isApproveSuccess) refetchAllowance()
-    }, [isApproveSuccess, refetchAllowance])
+        if (approveState.isSuccess) refetchAllowance()
+    }, [approveState.isSuccess, refetchAllowance])
 
     useEffect(() => {
-        if (isIntSuccess) setInterestAmount("")
-        if (isPrinSuccess) setPrincipalAmount("")
-    }, [isIntSuccess, isPrinSuccess])
+        if (intState.isSuccess) setInterestAmount("")
+        if (prinState.isSuccess) setPrincipalAmount("")
+    }, [intState.isSuccess, prinState.isSuccess])
 
     if (!address || !issuer || address.toLowerCase() !== (issuer as string).toLowerCase()) {
         return null // Hidden for non-admins
@@ -57,7 +59,7 @@ export function AdminPanel() {
 
     const handleDistribute = (type: "interest" | "principal") => {
         const valueStr = type === "interest" ? interestAmount : principalAmount
-        if (!valueStr) return
+        if (!valueStr || Number(valueStr) <= 0) return
 
         const valueRaw = parseUnits(valueStr, 6)
 

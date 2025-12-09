@@ -1,4 +1,6 @@
 import { Button } from "@/components/ui/button"
+import { AnimatedButton } from "@/components/ui/animated-button"
+import { AnimatedCard } from "@/components/ui/animated-card"
 import { ArrowUpRight } from "lucide-react"
 
 interface BondCardProps {
@@ -13,7 +15,7 @@ interface BondCardProps {
 
 export function BondCard({ name, shares, currentValue, yield: yieldValue, apy, image }: BondCardProps) {
   return (
-    <div className="flex items-center gap-4 rounded-lg border border-border bg-muted/50 p-4">
+    <AnimatedCard interactive={true} className="flex items-center gap-4 p-4">
       <img src={image || "/placeholder.svg"} alt={name} className="h-16 w-16 rounded-lg object-cover" />
       <div className="flex-1 space-y-1">
         <h3 className="font-semibold text-foreground">{name}</h3>
@@ -36,6 +38,6 @@ export function BondCard({ name, shares, currentValue, yield: yieldValue, apy, i
           <ArrowUpRight className="ml-1 h-3 w-3" />
         </Button>
       </div>
-    </div>
+    </AnimatedCard>
   )
 }

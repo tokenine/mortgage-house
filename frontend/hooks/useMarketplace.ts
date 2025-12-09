@@ -1,6 +1,7 @@
 import { useReadContract, useReadContracts } from "wagmi"
 import { CONTRACTS } from "@/lib/contracts"
 import { formatUnits } from "viem"
+import { useMarketplaceWebSocket } from "./useWebSocket"
 
 export interface SellOrder {
     id: number
@@ -11,6 +12,7 @@ export interface SellOrder {
 }
 
 export function useMarketplace() {
+    const { lastMarketUpdate } = useMarketplaceWebSocket()
     const { data: nextOrderId } = useReadContract({
         ...CONTRACTS.mortgageBond,
         functionName: "nextOrderId",
@@ -58,6 +60,7 @@ export function useMarketplace() {
 
     return {
         activeOrders,
-        refetchOrders: refetch
+        refetchOrders: refetch,
+        lastUpdate: lastMarketUpdate,
     }
 }

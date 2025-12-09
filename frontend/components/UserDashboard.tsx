@@ -1,20 +1,26 @@
 "use client"
 
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi"
+import { useAccount, useWriteContract } from "wagmi"
 import { formatUnits } from "viem"
 import { CONTRACTS } from "@/lib/contracts"
 import { useMortgageBond } from "@/hooks/useMortgageBond"
+import { useTransactionWithToast } from "@/hooks/useTransactionState"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Loader2, Wallet } from "lucide-react"
+import { Loader2, Wallet, AlertCircle } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export function UserDashboard() {
     const { address } = useAccount()
     const { investorInfo, pendingRewards, refetchUserStats } = useMortgageBond()
 
     const { writeContract, data: txHash, isPending } = useWriteContract()
-    const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash: txHash })
+    const { isSuccess, isConfirming } = useTransactionWithToast(
+        txHash,
+        "Claiming rewards...",
+        "Rewards claimed successfully!"
+    )
 
     if (isSuccess) {
         refetchUserStats()

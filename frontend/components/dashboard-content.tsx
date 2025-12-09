@@ -1,10 +1,15 @@
+"use client"
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { TrendingUp, DollarSign, Briefcase, Coins } from "lucide-react"
 import { StatsCard } from "./stats-card"
 import { BondCard } from "./bond-card"
+import { useMediaQuery } from "@/hooks/use-media-query"
 
 export function DashboardContent() {
+  const isMobile = useMediaQuery("(max-width: 768px)")
+  
   const myBonds = [
     {
       id: 1,
@@ -41,7 +46,7 @@ export function DashboardContent() {
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className={`grid gap-4 ${isMobile ? "grid-cols-1" : "md:grid-cols-3"}`}>
         <StatsCard
           title="Total Invested"
           value={`$${totalInvested.toLocaleString()}`}

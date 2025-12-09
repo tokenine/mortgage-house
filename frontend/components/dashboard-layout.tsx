@@ -8,6 +8,7 @@ import { usePathname } from "next/navigation"
 import { LayoutDashboard, Store, Settings, Wallet, Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { WalletConnect } from "@/components/WalletConnect"
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -73,10 +74,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
           {/* Wallet Info */}
           <div className="border-t border-sidebar-border p-4">
-            <Button className="w-full bg-transparent" variant="outline">
-              <Wallet className="mr-2 h-4 w-4" />
-              Connect Wallet
-            </Button>
+            <WalletConnect />
           </div>
         </div>
 
