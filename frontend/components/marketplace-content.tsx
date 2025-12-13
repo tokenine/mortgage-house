@@ -1,23 +1,27 @@
 "use client"
 
+import { useState } from "react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { PropertyCard } from "./property-card"
 import { SellOrderCard } from "./sell-order-card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ErrorMessage } from "@/components/ui/error-message"
+import { OrderCreationModal } from "./order-creation-modal"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { useProjects } from "@/hooks/useProjects"
+import { useMarketplace } from "@/hooks/useMarketplace"
 
 export function MarketplaceContent() {
   const isMobile = useMediaQuery("(max-width: 768px)")
   const { projects, loading, error, refetch } = useProjects()
+  const { activeOrders, refetchOrders } = useMarketplace()
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
-  const secondaryMarket = [
-    { id: 1, seller: "0x742d...5f8a", property: "Suburban House #A142", shares: 25, price: 2650, discount: -5 },
-    { id: 2, seller: "0x8c3e...92b1", property: "Downtown Condo #B89", shares: 15, price: 1890, discount: 8 },
-    { id: 3, seller: "0x1f9a...4d2c", property: "Beach Villa #C203", shares: 10, price: 1340, discount: 12 },
-  ]
+  // Get property name for each order (assuming single property MVP)
+  const getPropertyName = () => {
+    return projects.length > 0 ? projects[0].name : "Property"
+  }
 
   return (
     <div className="space-y-8">
@@ -76,19 +80,41 @@ export function MarketplaceContent() {
             <CardDescription className="text-muted-foreground">Buy bond shares from other investors</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {secondaryMarket.map((order) => (
-                <SellOrderCard key={order.id} {...order} />
-              ))}
-            </div>
+            {activeOrders.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No active sell orders found. Be the first to list!
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {activeOrders.map((order) => (
+                  <SellOrderCard 
+                    key={order.id} 
+                    order={order}
+                    propertyName={getPropertyName()}
+                    onSuccess={refetchOrders}
+                  />
+                ))}
+              </div>
+            )}
           </CardContent>
           <CardFooter>
-            <Button variant="outline" className="w-full bg-transparent">
-              Create Sell Order
+            <Button 
+              variant="outline" 
+              className="w-full bg-transparent"
+              onClick={() => setIsModalOpen(true)}
+            >
+              Create Order
             </Button>
           </CardFooter>
         </Card>
       </div>
+
+      {/* Order Creation Modal */}
+      <OrderCreationModal
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        onSuccess={refetchOrders}
+      />
     </div>
   )
 }

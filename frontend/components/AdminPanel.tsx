@@ -102,7 +102,7 @@ export function AdminPanel() {
         })
     }
 
-    const isLoading = isApproving || isApproveConfirming || isIntPending || isIntConfirming || isPrinPending || isPrinConfirming || isWithPending || isWithConfirming
+    const isLoading = isApproving || approveState.isConfirming || isIntPending || intState.isConfirming || isPrinPending || prinState.isConfirming || isWithPending || withState.isConfirming
 
     return (
         <Card className="border-destructive/50 bg-destructive/5">

@@ -42,14 +42,17 @@ async function fetchOnChainStats() {
       client.readContract({
         ...CONTRACTS.mortgageBond,
         functionName: "FUNDING_CAP",
+        args: [],
       }),
       client.readContract({
         ...CONTRACTS.mortgageBond,
         functionName: "totalPrincipalRaised",
+        args: [],
       }),
       client.readContract({
         ...CONTRACTS.mortgageBond,
         functionName: "isFundingActive",
+        args: [],
       }),
     ])
 
@@ -78,14 +81,17 @@ export async function GET() {
 
     const onChain = await fetchOnChainStats()
 
-    const projectsWithOnChain = valid.map((project) => {
-      const onChainMeta: ProjectOnChainMetadata = {
+    const projectsWithOnChain = valid.map((project: { onChain: { chainId: any; decimals: any }; fundingCap: any; raised: any }) => {
+      const chainId = project.onChain?.chainId ?? customChain.id
+      const decimals = project.onChain?.decimals ?? 6
+
+      const onChainMeta = {
         mortgageBondAddress: CONTRACTS.mortgageBond.address,
         paymentTokenAddress: CONTRACTS.mockToken.address,
-        chainId: project.onChain?.chainId || customChain.id,
-        decimals: project.onChain?.decimals || 6,
+        chainId: chainId as number,
+        decimals: decimals as number,
         isFundingActive: onChain?.isFundingActive,
-      }
+      } satisfies ProjectOnChainMetadata
 
       return {
         ...project,
