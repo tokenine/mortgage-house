@@ -181,6 +181,6 @@ export function InvestCard() {
                     </AnimatedButton>
                 )}
             </CardFooter>
-        </Card>
+        </AnimatedCard>
     )
 }

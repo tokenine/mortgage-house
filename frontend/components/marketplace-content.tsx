@@ -4,46 +4,14 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button"
 import { PropertyCard } from "./property-card"
 import { SellOrderCard } from "./sell-order-card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { ErrorMessage } from "@/components/ui/error-message"
 import { useMediaQuery } from "@/hooks/use-media-query"
+import { useProjects } from "@/hooks/useProjects"
 
 export function MarketplaceContent() {
   const isMobile = useMediaQuery("(max-width: 768px)")
-  
-  const primaryMarket = [
-    {
-      id: 1,
-      name: "Modern Apartment Complex",
-      location: "Austin, TX",
-      apy: 8.5,
-      fundingCap: 250000,
-      raised: 175000,
-      maturity: "24 months",
-      investors: 42,
-      image: "/modern-apartment-complex.png",
-    },
-    {
-      id: 2,
-      name: "Family Home Renovation",
-      location: "Seattle, WA",
-      apy: 7.2,
-      fundingCap: 150000,
-      raised: 98000,
-      maturity: "18 months",
-      investors: 28,
-      image: "/family-home-renovation.jpg",
-    },
-    {
-      id: 3,
-      name: "Commercial Property",
-      location: "Miami, FL",
-      apy: 9.1,
-      fundingCap: 500000,
-      raised: 425000,
-      maturity: "36 months",
-      investors: 67,
-      image: "/commercial-property-building.jpg",
-    },
-  ]
+  const { projects, loading, error, refetch } = useProjects()
 
   const secondaryMarket = [
     { id: 1, seller: "0x742d...5f8a", property: "Suburban House #A142", shares: 25, price: 2650, discount: -5 },
@@ -60,11 +28,39 @@ export function MarketplaceContent() {
           <p className="text-muted-foreground">Invest in new tokenized mortgage bonds</p>
         </div>
 
-        <div className={`grid gap-6 ${isMobile ? "grid-cols-1" : "md:grid-cols-2 lg:grid-cols-3"}`}>
-          {primaryMarket.map((property) => (
-            <PropertyCard key={property.id} {...property} />
-          ))}
-        </div>
+        {error && (
+          <ErrorMessage
+            message={error}
+            onRetry={refetch}
+          />
+        )}
+
+        {loading && !error && (
+          <div className={`grid gap-6 ${isMobile ? "grid-cols-1" : "md:grid-cols-2 lg:grid-cols-3"}`}>
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="space-y-4">
+                <Skeleton className="h-48 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!loading && !error && projects.length === 0 && (
+          <div className="text-center py-12 text-muted-foreground">
+            No projects available at this time.
+          </div>
+        )}
+
+        {!loading && !error && projects.length > 0 && (
+          <div className={`grid gap-6 ${isMobile ? "grid-cols-1" : "md:grid-cols-2 lg:grid-cols-3"}`}>
+            {projects.map((property) => (
+              <PropertyCard key={property.id} {...property} />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Secondary Market */}

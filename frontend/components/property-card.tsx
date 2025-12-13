@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { TrendingUp, Users, Calendar, MapPin } from "lucide-react"
+import Link from "next/link"
 
 interface PropertyCardProps {
   id: number
@@ -17,6 +18,7 @@ interface PropertyCardProps {
 }
 
 export function PropertyCard({
+  id,
   name,
   location,
   apy,
@@ -67,10 +69,12 @@ export function PropertyCard({
         </div>
       </CardContent>
       <CardFooter>
-        <Button className="w-full bg-primary hover:bg-primary/90">
-          <TrendingUp className="mr-2 h-4 w-4" />
-          Invest Now
-        </Button>
+        <Link href={`/mortgage/${id}`} className="w-full">
+          <Button className="w-full bg-primary hover:bg-primary/90">
+            <TrendingUp className="mr-2 h-4 w-4" />
+            Invest Now
+          </Button>
+        </Link>
       </CardFooter>
     </Card>
   )

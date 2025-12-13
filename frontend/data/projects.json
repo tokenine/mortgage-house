@@ -1,0 +1,29 @@
+{
+  "projects": [
+    {
+      "id": 1,
+      "name": "Modern Apartment Complex",
+      "location": "Austin, TX",
+      "image": "/modern-apartment-complex.png",
+      "apy": 8.5,
+      "fundingCap": 250000,
+      "raised": 175000,
+      "maturity": "24 months",
+      "investors": 42,
+      "loanAmount": 250000,
+      "interestRate": 8.5,
+      "loanTerm": 24,
+      "propertyValue": 320000,
+      "loanToValue": 78,
+      "riskRating": "A",
+      "borrowerType": "Commercial Developer",
+      "description": "Prime location apartment complex in downtown Austin with 12 units. Experienced developer with proven track record. Property includes modern amenities and is in a high-demand rental market.",
+      "onChain": {
+        "mortgageBondAddress": "0x5F5d42A41E678701a241b5bb1944CF3919346445",
+        "paymentTokenAddress": "0x19b4D862Df0b30691D61674847657c34a60cFEE8",
+        "chainId": 7117,
+        "decimals": 6
+      }
+    }
+  ]
+}
