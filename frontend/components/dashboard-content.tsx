@@ -16,49 +16,16 @@ export function DashboardContent() {
   const { address } = useAccount()
   const { portfolio } = usePortfolio()
 
-  // Mock data for bonds that don't have investments yet
-  const mockBonds = [
-    {
-      id: 1,
-      name: "Suburban House #A142",
-      shares: 50,
-      currentValue: 5240,
-      yield: 312,
-      apy: 7.5,
-      image: "/modern-suburban-house.png",
-    },
-    {
-      id: 2,
-      name: "Downtown Condo #B89",
-      shares: 35,
-      currentValue: 4120,
-      yield: 178,
-      apy: 6.8,
-      image: "/downtown-condo-building.jpg",
-    },
-    {
-      id: 3,
-      name: "Beach Villa #C203",
-      shares: 25,
-      currentValue: 3140,
-      yield: 95,
-      apy: 8.2,
-      image: "/tropical-beach-villa.png",
-    },
-  ]
-
-  // Use real portfolio data if available, otherwise use mock data
-  const bonds = portfolio.investments.length > 0 
-    ? portfolio.investments.map(inv => ({
-        id: inv.id || inv.projectId,
-        name: inv.name || `Bond #${inv.projectId}`,
-        image: inv.image || "/placeholder.svg",
-        shares: Number(inv.shares),
-        currentValue: inv.currentValue,
-        yield: inv.yield,
-        apy: inv.apy,
-      }))
-    : mockBonds
+  // Use real portfolio data
+  const bonds = portfolio.investments.map(inv => ({
+    id: inv.id || 0,
+    name: inv.name || `Bond #${inv.projectId}`,
+    image: inv.image || "/placeholder.svg",
+    shares: Number(inv.shares),
+    currentValue: inv.currentValue,
+    yield: inv.yield,
+    apy: inv.apy,
+  }))
     
   const totalInvested = bonds.reduce((sum, bond) => sum + (bond.currentValue || 0), 0)
   const totalYield = bonds.reduce((sum, bond) => sum + (bond.yield || 0), 0)

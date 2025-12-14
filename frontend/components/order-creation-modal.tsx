@@ -59,7 +59,8 @@ import { AlertTriangle } from 'lucide-react'
 import { useFormValidation } from '@/hooks/useFormValidation'
 import { useTransactionWithToast } from '@/hooks/useTransactionState'
 import { useMortgageBond } from '@/hooks/useMortgageBond'
-import { CONTRACTS } from '@/lib/contracts'
+import { getMortgageBondConfig, getPaymentTokenConfig } from '@/lib/projects'
+import { useCurrentProject } from '@/contexts/ProjectContext'
 import { OrderMode, OrderFormValues } from '@/types/marketplace'
 import { getValidationRules } from '@/lib/order-validation'
 import { OrderCreationErrorBoundary } from './order-creation-error-boundary'
@@ -100,17 +101,26 @@ function OrderCreationModalContent({
   onSuccess,
 }: OrderCreationModalProps) {
   const { address } = useAccount()
+  const { currentProject } = useCurrentProject()
   const [mode, setMode] = useState<OrderMode>('sell')
   const [transactionError, setTransactionError] = useState<string | null>(null)
+  const isBuyOrderEnabled =
+    (process.env.NEXT_PUBLIC_MARKETPLACE_ENABLE_CREATE_BUY_ORDER ?? 'false')
+      .toLowerCase() === 'true'
+
+  // Get contract configs from current project
+  const mortgageBondConfig = currentProject ? getMortgageBondConfig(currentProject.id) : null
+  const paymentTokenConfig = currentProject ? getPaymentTokenConfig(currentProject.id) : null
 
   // Fetch balances
   const { investorInfo } = useMortgageBond()
   const { data: usdtBalance } = useReadContract({
-    ...CONTRACTS.mockToken,
+    address: paymentTokenConfig?.address,
+    abi: paymentTokenConfig?.abi,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
     query: {
-      enabled: !!address,
+      enabled: !!address && !!paymentTokenConfig,
     },
   })
 
@@ -157,14 +167,15 @@ function OrderCreationModalContent({
 
   // Check token allowance
   const { data: allowance } = useReadContract({
-    ...CONTRACTS.mockToken,
+    address: paymentTokenConfig?.address,
+    abi: paymentTokenConfig?.abi,
     functionName: 'allowance',
     args:
-      address && (mode === 'sell' || mode === 'buy')
-        ? [address, CONTRACTS.mortgageBond.address]
+      address && (mode === 'sell' || mode === 'buy') && mortgageBondConfig
+        ? [address, mortgageBondConfig.address]
         : undefined,
     query: {
-      enabled: !!address && (mode === 'sell' || mode === 'buy'),
+      enabled: !!address && (mode === 'sell' || mode === 'buy') && !!paymentTokenConfig && !!mortgageBondConfig,
     },
   })
 
@@ -184,8 +195,10 @@ function OrderCreationModalContent({
       setTimeout(() => {
         if (mode === 'sell') {
           try {
+            if (!mortgageBondConfig) throw new Error('Project configuration missing')
             writeOrder({
-              ...CONTRACTS.mortgageBond,
+              address: mortgageBondConfig.address,
+              abi: mortgageBondConfig.abi,
               functionName: 'createSellOrder',
               args: [parseUnits(shares, 6), parseUnits(price, 6)],
               account: address,
@@ -197,8 +210,10 @@ function OrderCreationModalContent({
           }
         } else {
           try {
+            if (!mortgageBondConfig) throw new Error('Project configuration missing')
             writeOrder({
-              ...CONTRACTS.mortgageBond,
+              address: mortgageBondConfig.address,
+              abi: mortgageBondConfig.abi,
               functionName: 'createBuyOrder',
               args: [parseUnits(shares, 6), parseUnits(price, 6)],
               account: address,
@@ -257,19 +272,23 @@ function OrderCreationModalContent({
 
           if (currentAllowance < requiredAmount) {
             // Request approval first
+            if (!paymentTokenConfig || !mortgageBondConfig) throw new Error('Project configuration missing')
             await writeApprove({
-              ...CONTRACTS.mockToken,
+              address: paymentTokenConfig.address,
+              abi: paymentTokenConfig.abi,
               functionName: 'approve',
               args: [
-                CONTRACTS.mortgageBond.address,
+                mortgageBondConfig.address,
                 requiredAmount,
               ],
               account: address,
             })
           } else {
             // Allowance sufficient, create sell order directly
+            if (!mortgageBondConfig) throw new Error('Project configuration missing')
             await writeOrder({
-              ...CONTRACTS.mortgageBond,
+              address: mortgageBondConfig.address,
+              abi: mortgageBondConfig.abi,
               functionName: 'createSellOrder',
               args: [
                 parseUnits(shares, 6),
@@ -279,25 +298,36 @@ function OrderCreationModalContent({
             })
           }
         } else {
+          // Feature toggle: block buy order creation if disabled
+          if (!isBuyOrderEnabled) {
+            const msg = 'Buy order creation is disabled by configuration.'
+            setTransactionError(msg)
+            toast.error(msg)
+            return
+          }
           // Buy order - check allowance and create order
           const requiredAmount = parseUnits(price, 6)
           const currentAllowance = (allowance ?? BigInt(0)) as bigint
 
           if (currentAllowance < requiredAmount) {
             // Request approval first
+            if (!paymentTokenConfig || !mortgageBondConfig) throw new Error('Project configuration missing')
             await writeApprove({
-              ...CONTRACTS.mockToken,
+              address: paymentTokenConfig.address,
+              abi: paymentTokenConfig.abi,
               functionName: 'approve',
               args: [
-                CONTRACTS.mortgageBond.address,
+                mortgageBondConfig.address,
                 requiredAmount,
               ],
               account: address,
             })
           } else {
             // Allowance sufficient, create buy order directly
+            if (!mortgageBondConfig) throw new Error('Project configuration missing')
             await writeOrder({
-              ...CONTRACTS.mortgageBond,
+              address: mortgageBondConfig.address,
+              abi: mortgageBondConfig.abi,
               functionName: 'createBuyOrder',
               args: [
                 parseUnits(shares, 6),
@@ -339,6 +369,7 @@ function OrderCreationModalContent({
       allowance,
       writeApprove,
       writeOrder,
+      isBuyOrderEnabled,
     ]
   )
 
@@ -354,6 +385,9 @@ function OrderCreationModalContent({
   const getSubmitButtonText = () => {
     if (isLoading) {
       return mode === 'sell' ? 'Creating...' : 'Creating...'
+    }
+    if (mode === 'buy' && !isBuyOrderEnabled) {
+      return 'Buy Disabled'
     }
     if (mode === 'sell' && allowance && (allowance as bigint) < parseUnits(form.values.price || '0', 6)) {
       return 'Approve Tokens'
@@ -385,10 +419,18 @@ function OrderCreationModalContent({
         )}
 
         <form onSubmit={handleCreateOrder}>
-          <Tabs value={mode} onValueChange={(val) => setMode(val as OrderMode)}>
-            <TabsList className="grid w-full grid-cols-2">
+          <Tabs
+            value={mode}
+            onValueChange={(val) => {
+              if (val === 'buy' && !isBuyOrderEnabled) return
+              setMode(val as OrderMode)
+            }}
+          >
+            <TabsList className={`grid w-full ${isBuyOrderEnabled ? 'grid-cols-2' : 'grid-cols-1'}`}>
               <TabsTrigger value="sell">Sell Order</TabsTrigger>
-              <TabsTrigger value="buy">Buy Order</TabsTrigger>
+              {isBuyOrderEnabled && (
+                <TabsTrigger value="buy">Buy Order</TabsTrigger>
+              )}
             </TabsList>
 
             <TabsContent value="sell" className="space-y-4">
@@ -445,59 +487,61 @@ function OrderCreationModalContent({
               </div>
             </TabsContent>
 
-            <TabsContent value="buy" className="space-y-4">
-              {/* Balance Display */}
-              <div className="rounded-lg bg-muted p-3">
-                <p className="text-sm text-muted-foreground">Available USDT</p>
-                <p className="text-lg font-semibold">{availableUSDT}</p>
-              </div>
+            {isBuyOrderEnabled && (
+              <TabsContent value="buy" className="space-y-4">
+                {/* Balance Display */}
+                <div className="rounded-lg bg-muted p-3">
+                  <p className="text-sm text-muted-foreground">Available USDT</p>
+                  <p className="text-lg font-semibold">{availableUSDT}</p>
+                </div>
 
-              {/* Shares Input */}
-              <div className="space-y-2">
-                <Label htmlFor="buy-shares">Number of Shares</Label>
-                <Input
-                  id="buy-shares"
-                  type="number"
-                  placeholder="Enter number of shares"
-                  value={form.fields.shares.value}
-                  onChange={(e) => {
-                    form.setValue('shares', e.target.value)
-                    form.validateField('shares')
-                  }}
-                  disabled={isLoading}
-                />
-                {form.fields.shares.error && (
-                  <Alert variant="destructive" className="py-2">
-                    <AlertDescription className="text-sm">
-                      {form.fields.shares.error}
-                    </AlertDescription>
-                  </Alert>
-                )}
-              </div>
+                {/* Shares Input */}
+                <div className="space-y-2">
+                  <Label htmlFor="buy-shares">Number of Shares</Label>
+                  <Input
+                    id="buy-shares"
+                    type="number"
+                    placeholder="Enter number of shares"
+                    value={form.fields.shares.value}
+                    onChange={(e) => {
+                      form.setValue('shares', e.target.value)
+                      form.validateField('shares')
+                    }}
+                    disabled={isLoading}
+                  />
+                  {form.fields.shares.error && (
+                    <Alert variant="destructive" className="py-2">
+                      <AlertDescription className="text-sm">
+                        {form.fields.shares.error}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
 
-              {/* Price Input */}
-              <div className="space-y-2">
-                <Label htmlFor="buy-price">Total Price (USDT)</Label>
-                <Input
-                  id="buy-price"
-                  type="number"
-                  placeholder="Enter total price"
-                  value={form.fields.price.value}
-                  onChange={(e) => {
-                    form.setValue('price', e.target.value)
-                    form.validateField('price')
-                  }}
-                  disabled={isLoading}
-                />
-                {form.fields.price.error && (
-                  <Alert variant="destructive" className="py-2">
-                    <AlertDescription className="text-sm">
-                      {form.fields.price.error}
-                    </AlertDescription>
-                  </Alert>
-                )}
-              </div>
-            </TabsContent>
+                {/* Price Input */}
+                <div className="space-y-2">
+                  <Label htmlFor="buy-price">Total Price (USDT)</Label>
+                  <Input
+                    id="buy-price"
+                    type="number"
+                    placeholder="Enter total price"
+                    value={form.fields.price.value}
+                    onChange={(e) => {
+                      form.setValue('price', e.target.value)
+                      form.validateField('price')
+                    }}
+                    disabled={isLoading}
+                  />
+                  {form.fields.price.error && (
+                    <Alert variant="destructive" className="py-2">
+                      <AlertDescription className="text-sm">
+                        {form.fields.price.error}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+              </TabsContent>
+            )}
           </Tabs>
 
           <DialogFooter className="mt-6">

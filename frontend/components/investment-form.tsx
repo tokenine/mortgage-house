@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { AlertCircle, Loader2 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { getMaxInvestableAmount, validationRules } from "@/lib/validation"
-import { CONTRACTS } from "@/lib/contracts"
+import { getMortgageBondConfig, getPaymentTokenConfig } from "@/lib/projects"
 import { useTransactionWithToast } from "@/hooks/useTransactionState"
 import { useFormValidation } from "@/hooks/useFormValidation"
 import type { MortgageProject } from "@/types/project"
@@ -34,6 +34,11 @@ export function InvestmentForm({
   const { address } = useAccount()
   const decimals = project.onChain?.decimals ?? 6
   const hasCalledSuccess = useRef(false)
+  
+  // Get contract configs from project
+  const projectId = typeof project.id === 'string' ? project.id : String(project.id)
+  const mortgageBondConfig = getMortgageBondConfig(projectId)
+  const paymentTokenConfig = getPaymentTokenConfig(projectId)
 
   const form = useFormValidation({
     initialValues: { amount: "" },
@@ -69,9 +74,10 @@ export function InvestmentForm({
   )
 
   const { data: allowance, refetch: refetchAllowance } = useReadContract({
-    ...CONTRACTS.mockToken,
+    address: paymentTokenConfig.address,
+    abi: paymentTokenConfig.abi,
     functionName: "allowance",
-    args: address ? [address, CONTRACTS.mortgageBond.address] : undefined,
+    args: address ? [address, mortgageBondConfig.address] : undefined,
     query: { enabled: !!address },
   })
 
@@ -124,9 +130,10 @@ export function InvestmentForm({
     if (!result.isValid) return
 
     writeApprove({
-      ...CONTRACTS.mockToken,
+      address: paymentTokenConfig.address,
+      abi: paymentTokenConfig.abi,
       functionName: "approve",
-      args: [CONTRACTS.mortgageBond.address, investAmount],
+      args: [mortgageBondConfig.address, investAmount],
     })
   }
 
@@ -135,7 +142,8 @@ export function InvestmentForm({
     if (!result.isValid) return
 
     writeInvest({
-      ...CONTRACTS.mortgageBond,
+      address: mortgageBondConfig.address,
+      abi: mortgageBondConfig.abi,
       functionName: "invest",
       args: [investAmount],
     })

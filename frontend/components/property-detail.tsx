@@ -13,7 +13,7 @@ import { MapPin, TrendingUp, Users, Calendar, DollarSign, Shield, Home, Percent 
 import { useProjects } from "@/hooks/useProjects"
 import { usePortfolio } from "@/hooks/usePortfolio"
 import { InvestmentForm } from "@/components/investment-form"
-import { CONTRACTS } from "@/lib/contracts"
+import { getPaymentTokenConfig } from "@/lib/projects"
 import { useMortgageBond } from "@/hooks/useMortgageBond"
 import type { MortgageProject } from "@/types/project"
 
@@ -31,14 +31,18 @@ export function PropertyDetail({ id }: PropertyDetailProps) {
   const [userBalance, setUserBalance] = useState<bigint>(BigInt(0))
   const [debugInfo, setDebugInfo] = useState<{ error: string; details: string } | null>(null)
 
+  // Get payment token config (will use first project initially, updated when project loads)
+  const projectId = project?.id ? (typeof project.id === 'string' ? project.id : String(project.id)) : null
+  const paymentTokenConfig = projectId ? getPaymentTokenConfig(projectId) : null
+
   // Fetch user's USDT token balance
   const { data: balanceData } = useReadContract({
-    address: CONTRACTS.mockToken.address,
-    abi: CONTRACTS.mockToken.abi,
+    address: paymentTokenConfig?.address,
+    abi: paymentTokenConfig?.abi,
     functionName: "balanceOf",
     args: [address || "0x0000000000000000000000000000000000000000"],
     query: {
-      enabled: isConnected && !!address,
+      enabled: isConnected && !!address && !!paymentTokenConfig,
     },
   })
 
@@ -61,20 +65,11 @@ export function PropertyDetail({ id }: PropertyDetailProps) {
   useEffect(() => {
     try {
       if (!loading && projects.length > 0) {
-        const projectId = parseInt(id, 10)
-        
-        if (isNaN(projectId)) {
-          setDebugInfo({
-            error: "Invalid project ID format",
-            details: `Received ID: "${id}" (type: ${typeof id})`,
-          })
-          return
-        }
-
-        const found = projects.find((p) => p.id === projectId)
+        // ID is now a slug like "modern-apartment-austin"
+        const found = projects.find((p) => String(p.id) === id)
         if (!found) {
           // Project not found, redirect to 404
-          console.warn(`Project with ID ${projectId} not found. Available IDs:`, projects.map(p => p.id))
+          console.warn(`Project with ID ${id} not found. Available IDs:`, projects.map(p => p.id))
           router.push("/404")
         } else {
           setProject(found)

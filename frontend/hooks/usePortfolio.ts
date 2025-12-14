@@ -3,6 +3,8 @@
 import { useEffect, useState, useCallback, useRef } from "react"
 import { useAccount } from "wagmi"
 import { useMortgageBond } from "./useMortgageBond"
+import { getProject } from "@/lib/projects"
+import { useCurrentProject } from "@/contexts/ProjectContext"
 
 export interface Portfolio {
   totalInvested: bigint
@@ -15,7 +17,7 @@ export interface Portfolio {
 
 export interface Investment {
   id?: number
-  projectId: number
+  projectId: string
   name?: string
   shares: bigint
   currentValue: number
@@ -24,8 +26,13 @@ export interface Investment {
   image?: string
 }
 
-export function usePortfolio() {
+export function usePortfolio(projectId?: string) {
   const { address } = useAccount()
+  const { projectId: contextProjectId } = useCurrentProject()
+  
+  // Use provided projectId or fallback to context
+  const activeProjectId = projectId || contextProjectId || undefined
+  
   const {
     fundingCap,
     totalRaised,
@@ -33,7 +40,7 @@ export function usePortfolio() {
     investorInfo,
     pendingRewards,
     refetchUserStats,
-  } = useMortgageBond()
+  } = useMortgageBond(activeProjectId)
 
   const [portfolio, setPortfolio] = useState<Portfolio>({
     totalInvested: BigInt(0),
@@ -73,15 +80,24 @@ export function usePortfolio() {
       if (shares && shares > BigInt(0)) {
         const totalInvestedValue = Number(shares) // In real implementation, calculate based on price per share
         const rewardValue = (pendingRewards as [bigint, bigint])?.[0] || BigInt(0)
+        
+        // Get project metadata from projects.json
+        let projectData
+        try {
+          projectData = activeProjectId ? getProject(activeProjectId) : null
+        } catch (error) {
+          console.error("Failed to load project metadata:", error)
+        }
+        
         const mockInvestment: Investment = {
-          id: 1,
-          projectId: 1, // This would come from contract events in production
-          name: "Suburban House #A142",
-          image: "/modern-suburban-house.png",
+          id: projectData?.id ? 1 : 1,
+          projectId: activeProjectId || "unknown",
+          name: projectData?.name || "Unknown Project",
+          image: projectData?.image || "/placeholder.svg",
           shares: shares,
           currentValue: totalInvestedValue,
           yield: Number(rewardValue) / 1e18, // Interest rewards
-          apy: 7.5, // This would come from the actual project data
+          apy: projectData?.apy || 0,
         }
 
         setPortfolio((prev) => ({

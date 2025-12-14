@@ -6,6 +6,7 @@ import "./globals.css"
 import { Web3Provider } from "@/components/Web3Provider"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { Toaster } from "@/components/ui/toaster"
+import { ProjectProvider } from "@/contexts/ProjectContext"
 
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
@@ -43,9 +44,11 @@ export default function RootLayout({
       <body className={`font-sans antialiased`}>
         <ErrorBoundary>
           <Web3Provider>
-            {children}
-            <Toaster />
-            <Analytics />
+            <ProjectProvider>
+              {children}
+              <Toaster />
+              <Analytics />
+            </ProjectProvider>
           </Web3Provider>
         </ErrorBoundary>
       </body>

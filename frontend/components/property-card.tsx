@@ -6,7 +6,7 @@ import { TrendingUp, Users, Calendar, MapPin } from "lucide-react"
 import Link from "next/link"
 
 interface PropertyCardProps {
-  id: number
+  id: string
   name: string
   location: string
   apy: number

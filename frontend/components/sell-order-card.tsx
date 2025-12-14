@@ -4,7 +4,8 @@ import { useState, useEffect } from "react"
 import { useAccount, useWriteContract, useReadContract } from "wagmi"
 import { formatUnits } from "viem"
 import { Button } from "@/components/ui/button"
-import { CONTRACTS } from "@/lib/contracts"
+import { getMortgageBondConfig, getPaymentTokenConfig } from "@/lib/projects"
+import { useCurrentProject } from "@/contexts/ProjectContext"
 import { useTransactionWithToast } from "@/hooks/useTransactionState"
 import { Loader2 } from "lucide-react"
 import type { SellOrder } from "@/hooks/useMarketplace"
@@ -17,7 +18,12 @@ interface SellOrderCardProps {
 
 export function SellOrderCard({ order, propertyName = "Property", onSuccess }: SellOrderCardProps) {
   const { address } = useAccount()
+  const { currentProject } = useCurrentProject()
   const [error, setError] = useState<string | null>(null)
+  
+  // Get contract configs from current project
+  const mortgageBondConfig = currentProject ? getMortgageBondConfig(currentProject.id) : null
+  const paymentTokenConfig = currentProject ? getPaymentTokenConfig(currentProject.id) : null
   
   const { writeContract: writeApprove, data: approveTx, isPending: isApproving } = useWriteContract()
   const { writeContract: writeBuy, data: buyTx, isPending: isBuying } = useWriteContract()
@@ -34,9 +40,13 @@ export function SellOrderCard({ order, propertyName = "Property", onSuccess }: S
   )
 
   const { data: allowance, refetch: refetchAllowance } = useReadContract({
-    ...CONTRACTS.mockToken,
+    address: paymentTokenConfig?.address,
+    abi: paymentTokenConfig?.abi,
     functionName: "allowance",
-    args: address ? [address, CONTRACTS.mortgageBond.address] : undefined,
+    args: address && mortgageBondConfig ? [address, mortgageBondConfig.address] : undefined,
+    query: {
+      enabled: !!address && !!paymentTokenConfig && !!mortgageBondConfig,
+    },
   })
 
   useEffect(() => {
@@ -54,15 +64,22 @@ export function SellOrderCard({ order, propertyName = "Property", onSuccess }: S
   const handleBuy = () => {
     setError(null)
     
+    if (!paymentTokenConfig || !mortgageBondConfig) {
+      setError("Project configuration missing")
+      return
+    }
+    
     if (needsApproval) {
       writeApprove({
-        ...CONTRACTS.mockToken,
+        address: paymentTokenConfig.address,
+        abi: paymentTokenConfig.abi,
         functionName: "approve",
-        args: [CONTRACTS.mortgageBond.address, order.price]
+        args: [mortgageBondConfig.address, order.price]
       })
     } else {
       writeBuy({
-        ...CONTRACTS.mortgageBond,
+        address: mortgageBondConfig.address,
+        abi: mortgageBondConfig.abi,
         functionName: "buyShare",
         args: [BigInt(order.id)]
       })
