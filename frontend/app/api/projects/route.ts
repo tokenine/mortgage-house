@@ -10,7 +10,7 @@ import type { ProjectOnChainMetadata } from "@/types/project"
 function isValidProject(obj: any): boolean {
   return (
     obj &&
-    typeof obj.id === "number" &&
+    (typeof obj.id === "string" || typeof obj.id === "number") &&
     typeof obj.name === "string" &&
     typeof obj.location === "string" &&
     typeof obj.apy === "number" &&

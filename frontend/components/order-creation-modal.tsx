@@ -1,40 +1,4 @@
-/**
- * Unified Marketplace Order Modal Component
- * 
- * Provides a single modal interface for creating both buy and sell orders on the marketplace.
- * Users can switch between modes using tabs, with form validation and transaction handling
- * for both token approval and order creation.
- * 
- * Features:
- * - Mode switching (sell/buy) via tabs
- * - Real-time form validation with mode-specific rules
- * - Token approval flow (checks allowance, requests approval if needed)
- * - Blockchain transaction management with loading states
- * - Comprehensive error handling with user-friendly messages
- * - Mobile-responsive design (320px+ viewports)
- * - Accessibility support (keyboard navigation, ARIA labels, focus management)
- * - Error boundary wrapper for component-level error handling
- * 
- * @example
- * ```tsx
- * import { OrderCreationModal } from '@/components/order-creation-modal'
- * 
- * function MarketplaceComponent() {
- *   const [isOpen, setIsOpen] = useState(false)
- *   
- *   return (
- *     <>
- *       <button onClick={() => setIsOpen(true)}>Create Order</button>
- *       <OrderCreationModal
- *         open={isOpen}
- *         onOpenChange={setIsOpen}
- *         onSuccess={() => refetchOrders()}
- *       />
- *     </>
- *   )
- * }
- * ```
- */
+
 
 'use client'
 
@@ -59,8 +23,7 @@ import { AlertTriangle } from 'lucide-react'
 import { useFormValidation } from '@/hooks/useFormValidation'
 import { useTransactionWithToast } from '@/hooks/useTransactionState'
 import { useMortgageBond } from '@/hooks/useMortgageBond'
-import { getMortgageBondConfig, getPaymentTokenConfig } from '@/lib/projects'
-import { useCurrentProject } from '@/contexts/ProjectContext'
+import { CONTRACTS } from '@/lib/contracts'
 import { OrderMode, OrderFormValues } from '@/types/marketplace'
 import { getValidationRules } from '@/lib/order-validation'
 import { OrderCreationErrorBoundary } from './order-creation-error-boundary'
@@ -71,56 +34,27 @@ interface OrderCreationModalProps {
   onSuccess?: () => void // Callback to refresh order lists
 }
 
-/**
- * OrderCreationModalContent - Internal component that renders the modal content
- * 
- * Manages:
- * - Form state (shares, price) with real-time validation
- * - User balances (shares and USDT)
- * - Transaction state (approval and order creation)
- * - Mode switching (sell/buy) with form reset
- * - Error handling with user-friendly messages
- * 
- * Validation Rules:
- * - Sell Mode: shares ≤ available shares, price > 0
- * - Buy Mode: shares > 0, price ≤ available USDT
- * 
- * Transaction Flow:
- * 1. Check current token allowance
- * 2. If insufficient: Request approval, wait for confirmation
- * 3. Create order (sell or buy) with validated values
- * 4. Close modal and call onSuccess callback to refresh orders
- * 
- * @param open - Whether the modal is visible
- * @param onOpenChange - Callback to update modal visibility
- * @param onSuccess - Callback to refresh order list after successful creation
- */
+
 function OrderCreationModalContent({
   open,
   onOpenChange,
   onSuccess,
 }: OrderCreationModalProps) {
   const { address } = useAccount()
-  const { currentProject } = useCurrentProject()
   const [mode, setMode] = useState<OrderMode>('sell')
   const [transactionError, setTransactionError] = useState<string | null>(null)
   const isBuyOrderEnabled =
     (process.env.NEXT_PUBLIC_MARKETPLACE_ENABLE_CREATE_BUY_ORDER ?? 'false')
       .toLowerCase() === 'true'
 
-  // Get contract configs from current project
-  const mortgageBondConfig = currentProject ? getMortgageBondConfig(currentProject.id) : null
-  const paymentTokenConfig = currentProject ? getPaymentTokenConfig(currentProject.id) : null
-
   // Fetch balances
   const { investorInfo } = useMortgageBond()
   const { data: usdtBalance } = useReadContract({
-    address: paymentTokenConfig?.address,
-    abi: paymentTokenConfig?.abi,
+    ...CONTRACTS.mockToken,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
     query: {
-      enabled: !!address && !!paymentTokenConfig,
+      enabled: !!address,
     },
   })
 
@@ -167,15 +101,14 @@ function OrderCreationModalContent({
 
   // Check token allowance
   const { data: allowance } = useReadContract({
-    address: paymentTokenConfig?.address,
-    abi: paymentTokenConfig?.abi,
+    ...CONTRACTS.mockToken,
     functionName: 'allowance',
     args:
-      address && (mode === 'sell' || mode === 'buy') && mortgageBondConfig
-        ? [address, mortgageBondConfig.address]
+      address && (mode === 'sell' || mode === 'buy')
+        ? [address, CONTRACTS.mortgageBond.address]
         : undefined,
     query: {
-      enabled: !!address && (mode === 'sell' || mode === 'buy') && !!paymentTokenConfig && !!mortgageBondConfig,
+      enabled: !!address && (mode === 'sell' || mode === 'buy'),
     },
   })
 
@@ -195,10 +128,8 @@ function OrderCreationModalContent({
       setTimeout(() => {
         if (mode === 'sell') {
           try {
-            if (!mortgageBondConfig) throw new Error('Project configuration missing')
             writeOrder({
-              address: mortgageBondConfig.address,
-              abi: mortgageBondConfig.abi,
+              ...CONTRACTS.mortgageBond,
               functionName: 'createSellOrder',
               args: [parseUnits(shares, 6), parseUnits(price, 6)],
               account: address,
@@ -210,10 +141,8 @@ function OrderCreationModalContent({
           }
         } else {
           try {
-            if (!mortgageBondConfig) throw new Error('Project configuration missing')
             writeOrder({
-              address: mortgageBondConfig.address,
-              abi: mortgageBondConfig.abi,
+              ...CONTRACTS.mortgageBond,
               functionName: 'createBuyOrder',
               args: [parseUnits(shares, 6), parseUnits(price, 6)],
               account: address,
@@ -272,23 +201,19 @@ function OrderCreationModalContent({
 
           if (currentAllowance < requiredAmount) {
             // Request approval first
-            if (!paymentTokenConfig || !mortgageBondConfig) throw new Error('Project configuration missing')
             await writeApprove({
-              address: paymentTokenConfig.address,
-              abi: paymentTokenConfig.abi,
+              ...CONTRACTS.mockToken,
               functionName: 'approve',
               args: [
-                mortgageBondConfig.address,
+                CONTRACTS.mortgageBond.address,
                 requiredAmount,
               ],
               account: address,
             })
           } else {
             // Allowance sufficient, create sell order directly
-            if (!mortgageBondConfig) throw new Error('Project configuration missing')
             await writeOrder({
-              address: mortgageBondConfig.address,
-              abi: mortgageBondConfig.abi,
+              ...CONTRACTS.mortgageBond,
               functionName: 'createSellOrder',
               args: [
                 parseUnits(shares, 6),
@@ -311,23 +236,19 @@ function OrderCreationModalContent({
 
           if (currentAllowance < requiredAmount) {
             // Request approval first
-            if (!paymentTokenConfig || !mortgageBondConfig) throw new Error('Project configuration missing')
             await writeApprove({
-              address: paymentTokenConfig.address,
-              abi: paymentTokenConfig.abi,
+              ...CONTRACTS.mockToken,
               functionName: 'approve',
               args: [
-                mortgageBondConfig.address,
+                CONTRACTS.mortgageBond.address,
                 requiredAmount,
               ],
               account: address,
             })
           } else {
             // Allowance sufficient, create buy order directly
-            if (!mortgageBondConfig) throw new Error('Project configuration missing')
             await writeOrder({
-              address: mortgageBondConfig.address,
-              abi: mortgageBondConfig.abi,
+              ...CONTRACTS.mortgageBond,
               functionName: 'createBuyOrder',
               args: [
                 parseUnits(shares, 6),
@@ -562,9 +483,7 @@ function OrderCreationModalContent({
   )
 }
 
-/**
- * Exported component with error boundary wrapper
- */
+
 export function OrderCreationModal(props: OrderCreationModalProps) {
   return (
     <OrderCreationErrorBoundary>

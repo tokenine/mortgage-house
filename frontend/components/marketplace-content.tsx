@@ -11,18 +11,16 @@ import { OrderCreationModal } from "./order-creation-modal"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { useProjects } from "@/hooks/useProjects"
 import { useMarketplace } from "@/hooks/useMarketplace"
-import { useCurrentProject } from "@/contexts/ProjectContext"
 
 export function MarketplaceContent() {
   const isMobile = useMediaQuery("(max-width: 768px)")
   const { projects, loading, error, refetch } = useProjects()
   const { activeOrders, refetchOrders } = useMarketplace()
-  const { currentProject } = useCurrentProject()
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  // Get property name from current project
+  // Get property name for each order (assuming single property MVP)
   const getPropertyName = () => {
-    return currentProject?.name || "Property"
+    return projects.length > 0 ? projects[0].name : "Property"
   }
 
   return (
