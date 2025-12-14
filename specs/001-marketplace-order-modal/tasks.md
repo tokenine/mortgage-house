@@ -320,7 +320,7 @@
 - [x] T156 Documentation review: Ensure all docs up to date
 - [ ] T157 Create PR description with summary of changes
 - [ ] T158 Final manual testing: Complete workflow on fresh setup
-- [ ] T159 Review for constitution compliance (all 6 principles)
+- [ ] T159 Review for constitution compliance (all 7 principles)
 
 **Checkpoint**: Ready for code review and merge
 
