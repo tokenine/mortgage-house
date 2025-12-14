@@ -24,6 +24,30 @@
         "chainId": 7117,
         "decimals": 6
       }
+    },{
+      "id": "seaside-villa-renovation",
+      "name": "Seaside Villa Renovation",
+      "location": "Santa Monica, CA",
+      "image": "/modern-apartment-complex.png",
+      "apy": 12.5,
+      "fundingCap": 200000,
+      "raised": 0,
+      "maturity": "12 months",
+      "investors": 0,
+      "loanAmount": 200000,
+      "interestRate": 12.5,
+      "loanTerm": 12,
+      "propertyValue": 350000,
+      "loanToValue": 57,
+      "riskRating": "B+",
+      "borrowerType": "Property Flipper",
+      "description": "Complete renovation of a classic 1950s seaside villa. Project includes modernizing interiors while preserving historic exterior charm. High potential for resale value increase.",
+      "onChain": {
+        "mortgageBondAddress": "0xAE7a532B0cea182e6af06ddf1263e89D9deb78c5",
+        "paymentTokenAddress": "0x19b4D862Df0b30691D61674847657c34a60cFEE8",
+        "chainId": 7117,
+        "decimals": 6
+      }
     }
   ]
 }

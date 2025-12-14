@@ -11,6 +11,19 @@ contract DeployMortgageContract is Script {
     uint256 public constant SEPOLIA_CHAIN_ID = 11155111;
 
     function run() external {
+        // ========================================================================
+        // 🔧 DEPLOYMENT CONFIGURATION
+        // ========================================================================
+        // 1. Payment Token: The ERC20 token used for funding and repayment.
+        //    - Set to a specific address (e.g., 0x19b...) to use that token.
+        //    - Set to address(0) to automatically deploy a MockERC20 or use chain default.
+        address configPaymentToken = 0x19b4D862Df0b30691D61674847657c34a60cFEE8;
+
+        // 2. Funding Cap: The total loan amount to be raised.
+        //    - Example: 200_000 * 10**6 (for 200k tokens with 6 decimals)
+        uint256 configFundingCap = 200_000 * 10 ** 6;
+        // ========================================================================
+
         // 1. Setup Signer
         uint256 deployerPrivateKey = vm.envOr("PRIVATE_KEY", uint256(0));
 
@@ -27,10 +40,19 @@ contract DeployMortgageContract is Script {
         }
 
         // 2. Get or Deploy Payment Token
-        address paymentToken = getOrCreatePaymentToken();
+        address paymentToken = configPaymentToken;
+        if (paymentToken == address(0)) {
+            paymentToken = vm.envOr("PAYMENT_TOKEN", address(0));
+        }
+        
+        bool isCustomToken = paymentToken != address(0);
+
+        if (paymentToken == address(0)) {
+            paymentToken = getOrCreatePaymentToken();
+        }
 
         // 3. Deploy Mortgage Bond
-        uint256 fundingCap = 100_000 * 10 ** 6; // 100k tokens
+        uint256 fundingCap = vm.envOr("FUNDING_CAP", configFundingCap);
         MortgageBond bond = new MortgageBond(paymentToken, fundingCap);
 
         console.log("--------------------------------------------------");
@@ -38,11 +60,12 @@ contract DeployMortgageContract is Script {
         console.log("Chain ID:", block.chainid);
         console.log("MortgageBond deployed at:", address(bond));
         console.log("Payment Token:", paymentToken);
+        console.log("Funding Cap:", fundingCap);
         console.log("--------------------------------------------------");
 
         // 4. Post-Deploy Minting (Only for Test Environments)
         // If we deployed a fresh Mock token, mint some to the deployer and test user
-        if (isTestChain(block.chainid)) {
+        if (isTestChain(block.chainid) && !isCustomToken) {
             MockERC20(paymentToken).mint(msg.sender, 1_000_000 * 10 ** 6);
 
             address testUser = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;

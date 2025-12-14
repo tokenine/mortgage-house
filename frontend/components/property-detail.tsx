@@ -26,13 +26,16 @@ export function PropertyDetail({ id }: PropertyDetailProps) {
   const { projects, loading, error, refetch } = useProjects()
   const { onInvestmentSuccess } = usePortfolio()
   const { isConnected, address } = useAccount()
-  const { fundingCap, totalRaised, isFundingActive } = useMortgageBond()
   const [project, setProject] = useState<MortgageProject | null>(null)
+  
+  // Pass the project ID to useMortgageBond so it fetches the correct contract
+  const projectId = project?.id ? (typeof project.id === 'string' ? project.id : String(project.id)) : id
+  const { fundingCap, totalRaised, isFundingActive } = useMortgageBond(projectId)
+  
   const [userBalance, setUserBalance] = useState<bigint>(BigInt(0))
   const [debugInfo, setDebugInfo] = useState<{ error: string; details: string } | null>(null)
 
   // Get payment token config (will use first project initially, updated when project loads)
-  const projectId = project?.id ? (typeof project.id === 'string' ? project.id : String(project.id)) : null
   const paymentTokenConfig = projectId ? getPaymentTokenConfig(projectId) : null
 
   // Fetch user's USDT token balance

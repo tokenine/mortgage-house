@@ -20,14 +20,14 @@ export function BondCard({ name, shares, currentValue, yield: yieldValue, apy, i
       <div className="flex-1 space-y-1">
         <h3 className="font-semibold text-foreground">{name}</h3>
         <div className="flex gap-4 text-sm text-muted-foreground">
-          <span>{shares} shares</span>
+          <span>{shares.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} shares</span>
           <span>•</span>
           <span className="text-primary">{apy}% APY</span>
         </div>
       </div>
       <div className="text-right space-y-1">
-        <div className="text-lg font-semibold text-foreground">${currentValue.toLocaleString()}</div>
-        <div className="text-sm text-success">+${yieldValue} earned</div>
+        <div className="text-lg font-semibold text-foreground">${currentValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+        <div className="text-sm text-success">+${yieldValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} earned</div>
       </div>
       <div className="flex gap-2">
         <Button size="sm" variant="outline">

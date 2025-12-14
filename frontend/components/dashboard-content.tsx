@@ -21,7 +21,7 @@ export function DashboardContent() {
     id: inv.id || 0,
     name: inv.name || `Bond #${inv.projectId}`,
     image: inv.image || "/placeholder.svg",
-    shares: Number(inv.shares),
+    shares: Number(inv.shares) / 1e6, // Convert from smallest unit (6 decimals) to display value
     currentValue: inv.currentValue,
     yield: inv.yield,
     apy: inv.apy,
@@ -39,7 +39,7 @@ export function DashboardContent() {
       <div className={`grid gap-4 ${isMobile ? "grid-cols-1" : "md:grid-cols-3"}`}>
         <StatsCard
           title="Total Invested"
-          value={`$${totalInvested.toLocaleString()}`}
+          value={`$${totalInvested.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           description={`Across ${bonds.length} properties`}
           icon={DollarSign}
         />
@@ -50,7 +50,7 @@ export function DashboardContent() {
             <TrendingUp className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-success">${totalYield.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-success">${totalYield.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
             <p className="text-xs text-muted-foreground mt-1">
               <Button size="sm" className="mt-2 bg-success hover:bg-success/90 text-success-foreground">
                 <Coins className="mr-1 h-3 w-3" />
