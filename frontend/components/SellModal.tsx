@@ -147,7 +147,7 @@ export function SellModal() {
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button type="submit" onClick={handleCreateOrder} disabled={!shares || !price || isLoading}>
+                    <Button type="submit" onClick={handleCreateOrder} disabled={!form.fields.shares.value || !form.fields.price.value || isLoading}>
                         {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Create Order
                     </Button>

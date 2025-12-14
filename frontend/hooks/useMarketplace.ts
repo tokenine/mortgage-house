@@ -1,7 +1,6 @@
-import { useReadContract, useReadContracts } from "wagmi"
+import { useEffect } from "react"
+import { useReadContract, useReadContracts, usePublicClient } from "wagmi"
 import { CONTRACTS } from "@/lib/contracts"
-import { formatUnits } from "viem"
-import { useMarketplaceWebSocket } from "./useWebSocket"
 
 export interface SellOrder {
     id: number
@@ -12,7 +11,8 @@ export interface SellOrder {
 }
 
 export function useMarketplace() {
-    const { lastMarketUpdate } = useMarketplaceWebSocket()
+    const publicClient = usePublicClient()
+    
     const { data: nextOrderId } = useReadContract({
         ...CONTRACTS.mortgageBond,
         functionName: "nextOrderId",
@@ -58,9 +58,56 @@ export function useMarketplace() {
         })
     }
 
+    // Listen to blockchain events for real-time updates
+    useEffect(() => {
+        if (!publicClient) return
+
+        console.log("Setting up marketplace event listeners...")
+
+        // Watch for ShareListed events (when new sell orders are created)
+        const unwatchShareListed = publicClient.watchContractEvent({
+            address: CONTRACTS.mortgageBond.address,
+            abi: CONTRACTS.mortgageBond.abi,
+            eventName: 'ShareListed',
+            onLogs: (logs) => {
+                console.log("ShareListed event detected:", logs)
+                refetch() // Refresh orders when new order is created
+            },
+        })
+
+        // Watch for SharePurchased events (when orders are filled)
+        const unwatchSharePurchased = publicClient.watchContractEvent({
+            address: CONTRACTS.mortgageBond.address,
+            abi: CONTRACTS.mortgageBond.abi,
+            eventName: 'SharePurchased',
+            onLogs: (logs) => {
+                console.log("SharePurchased event detected:", logs)
+                refetch() // Refresh orders when order is filled
+            },
+        })
+
+        // Watch for ShareCancelled events (when orders are cancelled)
+        const unwatchShareCancelled = publicClient.watchContractEvent({
+            address: CONTRACTS.mortgageBond.address,
+            abi: CONTRACTS.mortgageBond.abi,
+            eventName: 'ShareCancelled',
+            onLogs: (logs) => {
+                console.log("ShareCancelled event detected:", logs)
+                refetch() // Refresh orders when order is cancelled
+            },
+        })
+
+        // Cleanup function
+        return () => {
+            console.log("Cleaning up marketplace event listeners...")
+            unwatchShareListed()
+            unwatchSharePurchased()
+            unwatchShareCancelled()
+        }
+    }, [publicClient, refetch])
+
     return {
         activeOrders,
         refetchOrders: refetch,
-        lastUpdate: lastMarketUpdate,
     }
 }

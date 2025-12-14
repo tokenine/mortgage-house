@@ -1,45 +1,35 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { AlertCircle } from "lucide-react"
 import { AdminBondSelector } from "./admin-bond-selector"
 import { RepaymentPanel } from "./repayment-panel"
 import { LifecyclePanel } from "./lifecycle-panel"
+import { getAllProjects } from "@/lib/projects"
 
 export function AdminContent() {
-  const [selectedBond, setSelectedBond] = useState("bond-1")
+  const [selectedBond, setSelectedBond] = useState<string>("")
   const [repaymentAmount, setRepaymentAmount] = useState("")
+  const [bonds, setBonds] = useState<any[]>([])
 
-  const bonds = [
-    {
-      id: "bond-1",
-      name: "Suburban House #A142",
-      status: "active",
-      principal: 100000,
-      outstanding: 85000,
-      nextPayment: "2025-01-15",
-      investors: 50,
-    },
-    {
-      id: "bond-2",
-      name: "Downtown Condo #B89",
-      status: "active",
-      principal: 150000,
-      outstanding: 120000,
-      nextPayment: "2025-01-20",
-      investors: 35,
-    },
-    {
-      id: "bond-3",
-      name: "Beach Villa #C203",
-      status: "funding",
-      principal: 200000,
-      outstanding: 200000,
-      nextPayment: "N/A",
-      investors: 25,
-    },
-  ]
+  // Load bonds from projects.json
+  useEffect(() => {
+    const projects = getAllProjects()
+    const bondData = projects.map((project) => ({
+      id: project.id,
+      name: project.name,
+      status: "active", // In real app, derive from contract state
+      principal: project.loanAmount || 0,
+      outstanding: project.loanAmount || 0, // In real app, fetch from contract
+      nextPayment: "N/A", // In real app, calculate from contract
+      investors: project.investors || 0,
+    }))
+    setBonds(bondData)
+    if (bondData.length > 0 && !selectedBond) {
+      setSelectedBond(bondData[0].id)
+    }
+  }, [])
 
   const handleMintRepayment = () => {
     console.log(`Minting repayment of ${repaymentAmount} for ${selectedBond}`)

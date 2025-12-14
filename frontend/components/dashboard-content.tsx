@@ -2,55 +2,45 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { TrendingUp, DollarSign, Briefcase, Coins } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
+import { TrendingUp, DollarSign, Briefcase, Coins, AlertCircle } from "lucide-react"
 import { StatsCard } from "./stats-card"
 import { BondCard } from "./bond-card"
 import { useMediaQuery } from "@/hooks/use-media-query"
+import { usePortfolio } from "@/hooks/usePortfolio"
+import { useAccount } from "wagmi"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export function DashboardContent() {
   const isMobile = useMediaQuery("(max-width: 768px)")
-  
-  const myBonds = [
-    {
-      id: 1,
-      name: "Suburban House #A142",
-      shares: 50,
-      currentValue: 5240,
-      yield: 312,
-      apy: 7.5,
-      image: "/modern-suburban-house.png",
-    },
-    {
-      id: 2,
-      name: "Downtown Condo #B89",
-      shares: 35,
-      currentValue: 4120,
-      yield: 178,
-      apy: 6.8,
-      image: "/downtown-condo-building.jpg",
-    },
-    {
-      id: 3,
-      name: "Beach Villa #C203",
-      shares: 25,
-      currentValue: 3140,
-      yield: 95,
-      apy: 8.2,
-      image: "/tropical-beach-villa.png",
-    },
-  ]
+  const { address } = useAccount()
+  const { portfolio } = usePortfolio()
 
-  const totalInvested = myBonds.reduce((sum, bond) => sum + bond.currentValue, 0)
-  const totalYield = myBonds.reduce((sum, bond) => sum + bond.yield, 0)
+  // Use real portfolio data
+  const bonds = portfolio.investments.map(inv => ({
+    id: inv.id || 0,
+    name: inv.name || `Bond #${inv.projectId}`,
+    image: inv.image || "/placeholder.svg",
+    shares: Number(inv.shares),
+    currentValue: inv.currentValue,
+    yield: inv.yield,
+    apy: inv.apy,
+  }))
+    
+  const totalInvested = bonds.reduce((sum, bond) => sum + (bond.currentValue || 0), 0)
+  const totalYield = bonds.reduce((sum, bond) => sum + (bond.yield || 0), 0)
 
   return (
     <div className="space-y-6">
+      {portfolio.isRefreshing && (
+        <p className="text-xs text-muted-foreground text-center">Refreshing portfolio…</p>
+      )}
       {/* Stats Cards */}
       <div className={`grid gap-4 ${isMobile ? "grid-cols-1" : "md:grid-cols-3"}`}>
         <StatsCard
           title="Total Invested"
           value={`$${totalInvested.toLocaleString()}`}
-          description={`Across ${myBonds.length} properties`}
+          description={`Across ${bonds.length} properties`}
           icon={DollarSign}
         />
 
@@ -72,8 +62,8 @@ export function DashboardContent() {
 
         <StatsCard
           title="Active Bonds"
-          value={myBonds.length.toString()}
-          description={`Avg APY: ${(myBonds.reduce((sum, b) => sum + b.apy, 0) / myBonds.length).toFixed(1)}%`}
+          value={bonds.length.toString()}
+          description={`Avg APY: ${bonds.length > 0 ? (bonds.reduce((sum, b) => sum + (b.apy || 0), 0) / bonds.length).toFixed(1) : 0}%`}
           icon={Briefcase}
         />
       </div>
@@ -85,11 +75,40 @@ export function DashboardContent() {
           <CardDescription className="text-muted-foreground">Your current bond portfolio and earnings</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {myBonds.map((bond) => (
-              <BondCard key={bond.id} {...bond} />
-            ))}
-          </div>
+          {portfolio.error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{portfolio.error}</AlertDescription>
+            </Alert>
+          )}
+
+          {portfolio.isLoading && (
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-20 w-full" />
+              ))}
+            </div>
+          )}
+
+          {!portfolio.isLoading && bonds.length === 0 && !address && (
+            <div className="text-center py-12 text-muted-foreground">
+              Connect your wallet to view your portfolio.
+            </div>
+          )}
+
+          {!portfolio.isLoading && bonds.length === 0 && address && (
+            <div className="text-center py-12 text-muted-foreground">
+              You haven't invested in any properties yet.
+            </div>
+          )}
+
+          {!portfolio.isLoading && bonds.length > 0 && (
+            <div className="space-y-4">
+              {bonds.map((bond) => (
+                <BondCard key={bond.id} {...bond} />
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
