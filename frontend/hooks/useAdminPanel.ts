@@ -14,8 +14,8 @@ import type {
   DistributionInput,
   DistributionValidation,
   AdminOperations,
-} from "@/specs/003-admin-blockchain-integration/contracts"
-import { TransactionStatus, DistributionType } from "@/specs/003-admin-blockchain-integration/contracts"
+} from "@/types/admin"
+import { TransactionStatus, DistributionType } from "@/types/admin"
 import type { Address, Hash } from "viem"
 
 /**

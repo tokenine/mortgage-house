@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Coins, Send, CheckCircle2, AlertCircle, Loader2 } from "lucide-react"
 import { toast } from "sonner"
-import type { AdminOperations, AdminPanelReadState } from "@/specs/003-admin-blockchain-integration/contracts"
+import type { AdminOperations, AdminPanelReadState } from "@/types/admin"
 
 interface RepaymentPanelProps {
   selectedBondName: string

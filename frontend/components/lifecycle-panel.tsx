@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Lock, Loader2 } from "lucide-react"
-import type { AdminOperations, AdminPanelReadState } from "@/specs/003-admin-blockchain-integration/contracts"
+import type { AdminOperations, AdminPanelReadState } from "@/types/admin"
 
 interface BondData {
   id: string
