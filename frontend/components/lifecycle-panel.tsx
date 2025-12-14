@@ -3,7 +3,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Lock } from "lucide-react"
+import { Lock, Loader2 } from "lucide-react"
+import type { AdminOperations, AdminPanelReadState } from "@/specs/003-admin-blockchain-integration/contracts"
 
 interface BondData {
   id: string
@@ -14,10 +15,15 @@ interface BondData {
 
 interface LifecyclePanelProps {
   bonds: BondData[]
-  onCloseFunding: (bondId: string) => void
+  operations: AdminOperations
+  state: AdminPanelReadState
 }
 
-export function LifecyclePanel({ bonds, onCloseFunding }: LifecyclePanelProps) {
+export function LifecyclePanel({ bonds, operations, state }: LifecyclePanelProps) {
+  const handleWithdrawPrincipal = () => {
+    operations.withdrawPrincipal.execute()
+  }
+
   return (
     <Card className="bg-card border-border">
       <CardHeader>
@@ -52,21 +58,56 @@ export function LifecyclePanel({ bonds, onCloseFunding }: LifecyclePanelProps) {
 
               {bond.status === "funding" && (
                 <Button
-                  onClick={() => onCloseFunding(bond.id)}
+                  onClick={handleWithdrawPrincipal}
                   size="sm"
+                  disabled={!operations.withdrawPrincipal.canExecute || operations.withdrawPrincipal.isProcessing}
                   className="w-full bg-primary hover:bg-primary/90"
+                  title={operations.withdrawPrincipal.disabledReason}
                 >
-                  Close Funding & Release Principal
+                  {operations.withdrawPrincipal.isProcessing ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Withdrawing...
+                    </>
+                  ) : (
+                    <>Close Funding & Release Principal</>
+                  )}
                 </Button>
               )}
 
               {bond.status === "active" && (
-                <Button size="sm" variant="outline" className="w-full bg-transparent" disabled>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="w-full bg-transparent" 
+                  disabled
+                >
                   Bond Active - Repayments in Progress
                 </Button>
               )}
+
+              {!operations.withdrawPrincipal.canExecute && operations.withdrawPrincipal.disabledReason && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  {operations.withdrawPrincipal.disabledReason}
+                </p>
+              )}
             </div>
           ))}
+        </div>
+
+        {/* State Information */}
+        <div className="rounded-lg bg-muted p-3 space-y-2">
+          <div className="text-sm text-muted-foreground">
+            <p>• Funding Status: {state.isFundingActive ? "Active" : "Closed"}</p>
+            <p>• Total Shares: {state.totalShares.toString()}</p>
+            <p>• Issuer: {state.issuerAddress}</p>
+          </div>
+          {state.isLoading && (
+            <div className="flex items-center gap-2 text-sm">
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              <span className="text-muted-foreground">Loading contract state...</span>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

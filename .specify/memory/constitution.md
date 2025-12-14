@@ -1,22 +1,20 @@
 <!--
-Sync Impact Report - Constitution v1.0.0
+Sync Impact Report - Constitution v1.1.0
 
-VERSION CHANGE: Initial → 1.0.0
-BUMP RATIONALE: Initial constitution establishing core governance framework for mortgage-house platform
+VERSION CHANGE: 1.0.0 → 1.1.0
+BUMP RATIONALE: MINOR version bump - Added new principle VII (Real Blockchain Integration) based on implementation learnings from Epics 1-4. This principle captures essential patterns for Web3 frontend development that emerged during production implementation.
 
-MODIFIED PRINCIPLES: N/A (initial version)
+MODIFIED PRINCIPLES: N/A
 ADDED SECTIONS:
-  - Core Principles (6 principles)
-  - Security & Compliance Requirements
-  - Development Workflow
-  - Governance
-
-REMOVED SECTIONS: N/A (initial version)
+  - Principle VII: Real Blockchain Integration (new)
+  
+REMOVED SECTIONS: N/A
 
 TEMPLATES REQUIRING UPDATES:
-  ✅ plan-template.md - Constitution Check section aligns with principles
+  ✅ plan-template.md - Constitution Check section aligns with all 7 principles
   ✅ spec-template.md - User story prioritization and testing requirements align
   ✅ tasks-template.md - Task organization by user story and test-first approach align
+  ⚠ REAL-BLOCKCHAIN-INTEGRATION-REQUIREMENTS.md - Technical implementation guide that operationalizes Principle VII
 
 FOLLOW-UP TODOS: None - all placeholders resolved
 -->
@@ -91,6 +89,19 @@ Code MUST prioritize readability and maintainability over cleverness:
 
 **Rationale**: Smart contracts are financial instruments requiring multi-stakeholder understanding (developers, auditors, users, regulators). Clarity reduces bugs, eases audits, and enables confident evolution.
 
+### VII. Real Blockchain Integration
+
+Frontend MUST interact with actual smart contracts, never mock blockchain operations:
+- All data MUST be fetched from smart contracts using Wagmi's `useReadContract` or `useReadContracts`
+- All state-changing operations MUST use `useWriteContract` with proper transaction confirmation via `useWaitForTransactionReceipt`
+- ERC20 token operations MUST check allowance and approve before transfers
+- Event listening MUST be implemented for real-time state updates using Wagmi's `useWatchContractEvent`
+- User feedback MUST reflect actual transaction states (pending, confirming, success, error) via toast notifications
+- Loading states MUST be displayed during blockchain operations
+- Console logs and alerts are NOT acceptable replacements for real blockchain interactions
+
+**Rationale**: Mock implementations create false confidence and hide integration issues until production. Real blockchain integration from day one ensures the application works correctly with actual on-chain state, gas costs, and transaction timing. This principle emerged from production implementation where mock patterns were identified and systematically replaced with real Web3 interactions.
+
 ## Security & Compliance Requirements
 
 **Smart Contract Audit**: All contracts MUST undergo external security audit before mainnet deployment.
@@ -160,4 +171,4 @@ Code MUST prioritize readability and maintainability over cleverness:
 
 **Living Document**: This constitution evolves with the project. Amendments are expected and encouraged when better practices emerge or project context changes.
 
-**Version**: 1.0.0 | **Ratified**: 2025-12-14 | **Last Amended**: 2025-12-14
+**Version**: 1.1.0 | **Ratified**: 2025-12-14 | **Last Amended**: 2025-12-14
