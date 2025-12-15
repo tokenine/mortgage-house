@@ -168,3 +168,5 @@ docs/.build/
 # Local development
 .local/
 local/
+
+# Note: Playwright tests moved to tests/ folder with own .gitignore
