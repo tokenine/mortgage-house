@@ -53,13 +53,19 @@
    - Financial & legal terms
    - 30+ abbreviations
 
-9. **README.md** (This navigation document) (3.2 KB)
+9. **FEATURE-TOGGLES.md** (3.8 KB)
+   - Available feature flags
+   - Configuration guide
+   - Implementation best practices
+   - Deployment strategies
+
+10. **README.md** (This navigation document) (3.2 KB)
    - Documentation overview
    - Navigation guide
    - Use case routing
    - Cross-references
 
-**Total Documentation:** ~50 KB of comprehensive guides
+**Total Documentation:** ~54 KB of comprehensive guides
 
 ---
 
@@ -68,8 +74,9 @@
 ### Frontend Developer
 ```
 Start → GLOSSARY.md → DEVELOPMENT-SETUP.md
-      → API-REFERENCE.md → TESTING.md
-      → CONTRIBUTING.md → SECURITY.md
+      → API-REFERENCE.md → FEATURE-TOGGLES.md
+      → TESTING.md → CONTRIBUTING.md
+      → SECURITY.md
 ```
 **Goal:** Understand platform, set up env, build features safely
 

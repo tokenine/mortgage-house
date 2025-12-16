@@ -1,22 +1,20 @@
 <!--
-Sync Impact Report - Constitution v1.1.0
+Sync Impact Report - Constitution v1.1.1
 
-VERSION CHANGE: 1.0.0 → 1.1.0
-BUMP RATIONALE: MINOR version bump - Added new principle VII (Real Blockchain Integration) based on implementation learnings from Epics 1-4. This principle captures essential patterns for Web3 frontend development that emerged during production implementation.
+VERSION CHANGE: 1.1.0 → 1.1.1
+BUMP RATIONALE: PATCH bump — editorial refresh to update Last Amended date; no semantic changes to principles or governance.
 
-MODIFIED PRINCIPLES: N/A
-ADDED SECTIONS:
-  - Principle VII: Real Blockchain Integration (new)
-  
-REMOVED SECTIONS: N/A
+MODIFIED PRINCIPLES: None
+ADDED SECTIONS: None
+REMOVED SECTIONS: None
 
 TEMPLATES REQUIRING UPDATES:
-  ✅ plan-template.md - Constitution Check section aligns with all 7 principles
-  ✅ spec-template.md - User story prioritization and testing requirements align
-  ✅ tasks-template.md - Task organization by user story and test-first approach align
-  ⚠ REAL-BLOCKCHAIN-INTEGRATION-REQUIREMENTS.md - Technical implementation guide that operationalizes Principle VII
+  ✅ plan-template.md - Constitution Check remains aligned
+  ✅ spec-template.md - Prioritization and independent testing remain aligned
+  ✅ tasks-template.md - User story grouping unchanged
+  ✅ agent-file-template.md - No agent-specific references conflict
 
-FOLLOW-UP TODOS: None - all placeholders resolved
+FOLLOW-UP TODOS: None
 -->
 
 # Mortgage-House Constitution
@@ -171,4 +169,4 @@ Frontend MUST interact with actual smart contracts, never mock blockchain operat
 
 **Living Document**: This constitution evolves with the project. Amendments are expected and encouraged when better practices emerge or project context changes.
 
-**Version**: 1.1.0 | **Ratified**: 2025-12-14 | **Last Amended**: 2025-12-14
+**Version**: 1.1.1 | **Ratified**: 2025-12-14 | **Last Amended**: 2025-12-15
