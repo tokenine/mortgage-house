@@ -23,6 +23,15 @@ export function getProject(id: string): Project {
 }
 
 /**
+ * Get a single project by slug ID (alias for getProject)
+ * Returns null if not found instead of throwing
+ */
+export function getProjectById(id: string): Project | null {
+  const project = projectsData.projects.find((p) => p.id === id)
+  return project || null
+}
+
+/**
  * Get the first project (default for MVP single-project mode)
  */
 export function getDefaultProject(): Project {

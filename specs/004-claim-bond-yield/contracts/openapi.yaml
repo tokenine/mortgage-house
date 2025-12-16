@@ -1,0 +1,25 @@
+openapi: 3.0.3
+info:
+  title: Claim Bond Yield
+  version: 0.1.0
+paths:
+  /frontend/claim:
+    post:
+      summary: Trigger claim for specific bond
+      description: UI action mapping to on-chain claimRewards; no backend call expected.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                projectId:
+                  type: integer
+              required:
+                - projectId
+      responses:
+        '200':
+          description: Transaction initiated
+        '400':
+          description: Invalid state or network

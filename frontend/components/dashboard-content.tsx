@@ -3,18 +3,34 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { TrendingUp, DollarSign, Briefcase, Coins, AlertCircle } from "lucide-react"
+import { TrendingUp, DollarSign, Briefcase, Coins, AlertCircle, Loader2 } from "lucide-react"
 import { StatsCard } from "./stats-card"
 import { BondCard } from "./bond-card"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { usePortfolio } from "@/hooks/usePortfolio"
-import { useAccount } from "wagmi"
+import { useAccount, useWriteContract } from "wagmi"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { getMortgageBondConfig } from "@/lib/projects"
+import { useTransactionWithToast } from "@/hooks/useTransactionState"
+
+const ENABLE_CLAIM_REWARDS = process.env.NEXT_PUBLIC_ENABLE_CLAIM_REWARDS === 'true'
 
 export function DashboardContent() {
   const isMobile = useMediaQuery("(max-width: 768px)")
   const { address } = useAccount()
-  const { portfolio } = usePortfolio()
+  const { portfolio, refetch } = usePortfolio()
+  
+  const { writeContract, data: txHash, isPending } = useWriteContract()
+  const { isSuccess, isConfirming } = useTransactionWithToast(
+    txHash,
+    "Claiming rewards...",
+    "Rewards claimed successfully!"
+  )
+
+  // Refetch portfolio after successful claim
+  if (isSuccess) {
+    refetch()
+  }
 
   // Use real portfolio data
   const bonds = portfolio.investments.map(inv => ({
@@ -25,10 +41,31 @@ export function DashboardContent() {
     currentValue: inv.currentValue,
     yield: inv.yield,
     apy: inv.apy,
+    projectId: inv.projectId,
   }))
     
   const totalInvested = bonds.reduce((sum, bond) => sum + (bond.currentValue || 0), 0)
   const totalYield = bonds.reduce((sum, bond) => sum + (bond.yield || 0), 0)
+
+  const handleClaimRewards = () => {
+    // For now, claim from the first project the user has invested in
+    // In a real app, you might want to claim from all projects or let user select
+    const firstInvestment = portfolio.investments[0]
+    if (!firstInvestment) return
+
+    const config = getMortgageBondConfig(firstInvestment.projectId)
+    if (!config) return
+
+    writeContract({
+      address: config.address,
+      abi: config.abi,
+      functionName: "claimRewards",
+      args: []
+    })
+  }
+
+  const isLoading = isPending || isConfirming
+  const canClaim = totalYield > 0 && !isLoading
 
   return (
     <div className="space-y-6">
@@ -52,10 +89,22 @@ export function DashboardContent() {
           <CardContent>
             <div className="text-2xl font-bold text-success">${totalYield.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              <Button size="sm" className="mt-2 bg-success hover:bg-success/90 text-success-foreground">
-                <Coins className="mr-1 h-3 w-3" />
-                Claim Rewards
-              </Button>
+              {ENABLE_CLAIM_REWARDS ? (
+                <Button 
+                  size="sm" 
+                  className="mt-2 bg-success hover:bg-success/90 text-success-foreground"
+                  onClick={handleClaimRewards}
+                  disabled={!canClaim}
+                >
+                  {isLoading && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
+                  <Coins className="mr-1 h-3 w-3" />
+                  Claim Rewards
+                </Button>
+              ) : (
+                <span className="text-xs text-muted-foreground italic">
+                  Claim rewards feature coming soon
+                </span>
+              )}
             </p>
           </CardContent>
         </Card>
@@ -105,7 +154,7 @@ export function DashboardContent() {
           {!portfolio.isLoading && bonds.length > 0 && (
             <div className="space-y-4">
               {bonds.map((bond) => (
-                <BondCard key={bond.id} {...bond} />
+                <BondCard key={bond.id} {...bond} onClaimSuccess={() => refetch()} />
               ))}
             </div>
           )}
