@@ -1,9 +1,9 @@
-import { InvestCard } from "@/components/InvestCard"
-import { UserDashboard } from "@/components/UserDashboard"
-import { WalletConnect } from "@/components/WalletConnect"
-import { MarketList } from "@/components/MarketList"
-import { SellModal } from "@/components/SellModal"
-import { AdminPanel } from "@/components/AdminPanel"
+import { InvestCard } from '@/domains/investment/components/InvestCard'
+import { UserDashboard } from '@/shared/ui/UserDashboard'
+import { WalletConnect } from '@/shared/ui/WalletConnect'
+import { MarketList } from '@/domains/marketplace/components/MarketList'
+import { SellModal } from '@/domains/marketplace/components/SellModal'
+import { AdminPanel } from '@/domains/admin/components/AdminPanel'
 
 export default function DebugPage() {
     return (

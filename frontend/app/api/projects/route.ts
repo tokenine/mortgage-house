@@ -2,8 +2,8 @@ import { NextResponse } from "next/server"
 import path from "node:path"
 import fs from "node:fs/promises"
 import { createPublicClient, formatUnits, http } from "viem"
-import { customChain } from "@/lib/wagmi-config"
-import { CONTRACTS } from "@/lib/contracts"
+import { customChain } from '@/shared/lib/wagmi-config'
+import { CONTRACTS } from '@/shared/lib/contracts'
 import type { ProjectOnChainMetadata } from "@/types/project"
 
 // Lightweight runtime validation without extra deps

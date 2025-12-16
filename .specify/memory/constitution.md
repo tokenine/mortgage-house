@@ -1,18 +1,20 @@
 <!--
-Sync Impact Report - Constitution v1.1.1
+Sync Impact Report - Constitution v1.1.2
 
-VERSION CHANGE: 1.1.0 → 1.1.1
-BUMP RATIONALE: PATCH bump — editorial refresh to update Last Amended date; no semantic changes to principles or governance.
+VERSION CHANGE: 1.1.1 -> 1.1.2
+BUMP RATIONALE: PATCH bump - refreshed Sync Impact Report and Last Amended date; no changes to principles or governance semantics.
 
 MODIFIED PRINCIPLES: None
 ADDED SECTIONS: None
 REMOVED SECTIONS: None
 
 TEMPLATES REQUIRING UPDATES:
-  ✅ plan-template.md - Constitution Check remains aligned
-  ✅ spec-template.md - Prioritization and independent testing remain aligned
-  ✅ tasks-template.md - User story grouping unchanged
-  ✅ agent-file-template.md - No agent-specific references conflict
+  - plan-template.md - Constitution Check remains aligned
+  - spec-template.md - Prioritization and independent testing remain aligned
+  - tasks-template.md - User story grouping unchanged
+  - agent-file-template.md - No agent-specific references conflict
+  - checklist-template.md - Placeholder guidance unaffected
+  - commands templates directory not present in .specify/templates (N/A)
 
 FOLLOW-UP TODOS: None
 -->
@@ -169,4 +171,4 @@ Frontend MUST interact with actual smart contracts, never mock blockchain operat
 
 **Living Document**: This constitution evolves with the project. Amendments are expected and encouraged when better practices emerge or project context changes.
 
-**Version**: 1.1.1 | **Ratified**: 2025-12-14 | **Last Amended**: 2025-12-15
+**Version**: 1.1.2 | **Ratified**: 2025-12-14 | **Last Amended**: 2025-12-16

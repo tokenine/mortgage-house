@@ -19,9 +19,9 @@ import {
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useAccount } from "wagmi"
-import { useMortgageBond } from "@/hooks/useMortgageBond"
-import { usePortfolio } from "@/hooks/usePortfolio"
-import { getProjectById } from "@/lib/projects"
+import { useMortgageBond } from "@/shared/hooks/useMortgageBond"
+import { usePortfolio } from '@/domains/investment/hooks/usePortfolio'
+import { getProjectById } from '@/domains/projects/lib/projects'
 
 export default function BondDetailPage() {
   const params = useParams()
