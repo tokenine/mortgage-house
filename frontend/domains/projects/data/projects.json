@@ -10,7 +10,7 @@
       "raised": 175000,
       "maturity": "24 months",
       "investors": 42,
-      "loanAmount": 250000,
+      "loanAmount": 150000,
       "interestRate": 8.5,
       "loanTerm": 24,
       "propertyValue": 320000,
@@ -24,17 +24,18 @@
         "chainId": 7117,
         "decimals": 6
       }
-    },{
+    },
+    {
       "id": "seaside-villa-renovation",
       "name": "Seaside Villa Renovation",
       "location": "Santa Monica, CA",
       "image": "/modern-apartment-complex.png",
       "apy": 12.5,
-      "fundingCap": 200000,
+      "fundingCap": 100000,
       "raised": 0,
       "maturity": "12 months",
       "investors": 0,
-      "loanAmount": 200000,
+      "loanAmount": 100000,
       "interestRate": 12.5,
       "loanTerm": 12,
       "propertyValue": 350000,
@@ -45,6 +46,31 @@
       "onChain": {
         "mortgageBondAddress": "0xAE7a532B0cea182e6af06ddf1263e89D9deb78c5",
         "paymentTokenAddress": "0x19b4D862Df0b30691D61674847657c34a60cFEE8",
+        "chainId": 7117,
+        "decimals": 6
+      }
+    },
+    {
+      "id": "test-deployment-project",
+      "name": "Test Deployment Project",
+      "location": "Test Location",
+      "image": "/modern-apartment-complex.png",
+      "apy": 12.5,
+      "fundingCap": 100000,
+      "raised": 0,
+      "maturity": "Test Maturity",
+      "investors": 0,
+      "loanAmount": 100000,
+      "interestRate": 12.5,
+      "loanTerm": 12,
+      "propertyValue": 100000,
+      "loanToValue": 0,
+      "riskRating": "Test",
+      "borrowerType": "Test Borrower",
+      "description": "Test description for the deployment verification.",
+      "onChain": {
+        "mortgageBondAddress": "0x2fc6FF2764043217cf03D326c7f80C7eB08C5b30",
+        "paymentTokenAddress": "0x10449d493a3c5dfc8d9d8fC5c6D48fd19bf6E585",
         "chainId": 7117,
         "decimals": 6
       }

@@ -17,11 +17,11 @@ contract DeployMortgageContract is Script {
         // 1. Payment Token: The ERC20 token used for funding and repayment.
         //    - Set to a specific address (e.g., 0x19b...) to use that token.
         //    - Set to address(0) to automatically deploy a MockERC20 or use chain default.
-        address configPaymentToken = 0x19b4D862Df0b30691D61674847657c34a60cFEE8;
+        address configPaymentToken = 0x10449d493a3c5dfc8d9d8fC5c6D48fd19bf6E585;
 
         // 2. Funding Cap: The total loan amount to be raised.
         //    - Example: 200_000 * 10**6 (for 200k tokens with 6 decimals)
-        uint256 configFundingCap = 200_000 * 10 ** 6;
+        uint256 configFundingCap = 100_000 * 10 ** 6;
         // ========================================================================
 
         // 1. Setup Signer
@@ -44,7 +44,7 @@ contract DeployMortgageContract is Script {
         if (paymentToken == address(0)) {
             paymentToken = vm.envOr("PAYMENT_TOKEN", address(0));
         }
-        
+
         bool isCustomToken = paymentToken != address(0);
 
         if (paymentToken == address(0)) {
