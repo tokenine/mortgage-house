@@ -70,7 +70,7 @@ async function fetchOnChainStats() {
 export async function GET() {
   try {
     // Correct path: process.cwd() in the frontend app is .../frontend
-    const filePath = path.join(process.cwd(), "data", "projects.json")
+    const filePath = path.join(process.cwd(), "domains", "projects", "data", "projects.json")
 
     const raw = await fs.readFile(filePath, "utf-8")
     const parsed = JSON.parse(raw)
