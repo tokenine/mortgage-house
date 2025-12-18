@@ -25,6 +25,15 @@
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "@domains/*": [
+        "./domains/*"
+      ],
+      "@shared/*": [
+        "./shared/*"
+      ],
+      "@/components/ui/*": [
+        "./shared/ui/ui/*"
       ]
     }
   },

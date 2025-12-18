@@ -1,5 +1,5 @@
-import { DashboardLayout } from "@/components/dashboard-layout"
-import { PropertyDetail } from "@/components/property-detail"
+import { DashboardLayout } from '@/shared/ui/dashboard-layout'
+import { PropertyDetail } from '@/domains/projects/components/property-detail'
 import { Suspense } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 

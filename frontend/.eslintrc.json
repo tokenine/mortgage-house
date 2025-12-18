@@ -1,0 +1,55 @@
+{
+  "root": true,
+  "extends": [
+    "next/core-web-vitals",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint", "import"],
+  "rules": {
+    "import/no-cycle": ["error", { "maxDepth": "∞" }],
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["@/components/*", "!@/components/index"],
+            "message": "Import from @/components (barrel) instead of specific component paths"
+          },
+          {
+            "group": ["@/hooks/*", "!@/hooks/index"],
+            "message": "Import from @/hooks (barrel) instead of specific hook paths"
+          },
+          {
+            "group": ["@/lib/*", "!@/lib/index"],
+            "message": "Import from @/lib (barrel) instead of specific lib paths"
+          },
+          {
+            "group": ["@/contexts/*", "!@/contexts/index"],
+            "message": "Import from @/contexts (barrel) instead of specific context paths"
+          },
+          {
+            "group": ["@/data/*", "!@/data/index"],
+            "message": "Import from @/data (barrel) instead of specific data paths"
+          },
+          {
+            "group": ["@/domains/*/*", "!@/domains/*/index"],
+            "message": "Import from @domains/{domain} (barrel) instead of internal domain paths"
+          },
+          {
+            "group": ["@/shared/*/*", "!@/shared/*/index"],
+            "message": "Import from @shared/{category} (barrel) instead of internal shared paths"
+          }
+        ]
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx"],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    }
+  ]
+}

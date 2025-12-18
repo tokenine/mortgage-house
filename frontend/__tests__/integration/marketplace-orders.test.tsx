@@ -7,7 +7,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { OrderCreationModal } from '@/components/order-creation-modal'
+import { OrderCreationModal } from '@/shared/ui/order-creation-modal'
 
 describe('Marketplace Order Integration Tests', () => {
   const mockOnOpenChange = vi.fn()

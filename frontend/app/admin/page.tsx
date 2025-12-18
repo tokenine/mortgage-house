@@ -1,5 +1,5 @@
-import { DashboardLayout } from "@/components/dashboard-layout"
-import { AdminContent } from "@/components/admin-content"
+import { DashboardLayout } from '@/shared/ui/dashboard-layout'
+import { AdminContent } from '@/domains/admin/components/admin-content'
 
 export default function AdminPage() {
   return (

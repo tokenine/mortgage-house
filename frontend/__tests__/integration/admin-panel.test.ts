@@ -6,10 +6,10 @@
 import { renderHook, waitFor } from "@testing-library/react"
 import { WagmiProvider } from "wagmi"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { useAdminPanel } from "@/hooks/useAdminPanel"
+import { useAdminPanel } from "@/domains/admin"
 
 // Mock wagmi hooks for testing
-jest.mock("wagmi", () => ({
+vi.mock("wagmi", () => ({
   useAccount: () => ({ address: "0x1234567890123456789012345678901234567890" }),
   useReadContracts: () => ({
     data: [
@@ -17,17 +17,17 @@ jest.mock("wagmi", () => ({
       { result: true }, // isFundingActive
       { result: 1000000n }, // totalShares
     ],
-    refetch: jest.fn(),
+    refetch: vi.fn(),
   }),
   useReadContract: () => ({
     data: 500000n, // allowance
-    refetch: jest.fn(),
+    refetch: vi.fn(),
   }),
   useWriteContract: () => ({ writeContract: jest.fn() }),
   useWatchContractEvent: () => ({}),
 }))
 
-jest.mock("@/lib/projects", () => ({
+vi.mock("@/lib/projects", () => ({
   getMortgageBondConfig: () => ({
     address: "0x5F5d42A41E678701a241b5bb1944CF3919346445",
     chainId: 7117,
@@ -41,7 +41,7 @@ jest.mock("@/lib/projects", () => ({
   }),
 }))
 
-jest.mock("./useTransactionState", () => ({
+vi.mock("./useTransactionState", () => ({
   useTransactionWithToast: () => ({
     isPending: false,
     isConfirming: false,

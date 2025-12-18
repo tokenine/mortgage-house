@@ -1,5 +1,5 @@
-import { DashboardLayout } from "@/components/dashboard-layout"
-import { DashboardContent } from "@/components/dashboard-content"
+import { DashboardLayout } from '@/shared/ui/dashboard-layout'
+import { DashboardContent } from '@/shared/ui/dashboard-content'
 
 export default function HomePage() {
   return (

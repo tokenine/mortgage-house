@@ -3,10 +3,10 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
-import { Web3Provider } from "@/components/Web3Provider"
-import { ErrorBoundary } from "@/components/error-boundary"
+import { Web3Provider } from '@/shared/ui/Web3Provider'
+import { ErrorBoundary } from '@/shared/ui/error-boundary'
 import { Toaster } from "@/components/ui/toaster"
-import { ProjectProvider } from "@/contexts/ProjectContext"
+import { ProjectProvider } from '@/domains/projects/contexts/ProjectContext'
 
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
