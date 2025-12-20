@@ -18,11 +18,6 @@ export function MarketplaceContent() {
   const { activeOrders, refetchOrders } = useMarketplace()
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  // Get property name for each order (assuming single property MVP)
-  const getPropertyName = () => {
-    return projects.length > 0 ? projects[0].name : "Property"
-  }
-
   return (
     <div className="space-y-8">
       {/* Primary Market */}
@@ -87,10 +82,9 @@ export function MarketplaceContent() {
             ) : (
               <div className="space-y-3">
                 {activeOrders.map((order) => (
-                  <SellOrderCard 
-                    key={order.id} 
+                  <SellOrderCard
+                    key={`${order.projectId}-${order.id}`}
                     order={order}
-                    propertyName={getPropertyName()}
                     onSuccess={refetchOrders}
                   />
                 ))}
@@ -98,8 +92,8 @@ export function MarketplaceContent() {
             )}
           </CardContent>
           <CardFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="w-full bg-transparent"
               onClick={() => setIsModalOpen(true)}
             >

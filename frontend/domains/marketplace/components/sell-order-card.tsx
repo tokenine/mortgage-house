@@ -4,8 +4,7 @@ import { useState, useEffect } from "react"
 import { useAccount, useWriteContract, useReadContract } from "wagmi"
 import { formatUnits } from "viem"
 import { Button } from "@/components/ui/button"
-import { getMortgageBondConfig, getPaymentTokenConfig } from '@/domains/projects/lib/projects'
-import { useCurrentProject } from '@/domains/projects/contexts/ProjectContext'
+import { getMortgageBondConfig, getPaymentTokenConfig, getProjectById } from '@/domains/projects/lib/projects'
 import { useTransactionWithToast } from "@/shared/hooks/useTransactionState"
 import { Loader2 } from "lucide-react"
 import type { SellOrder } from '@/domains/marketplace/hooks/useMarketplace'
@@ -16,15 +15,16 @@ interface SellOrderCardProps {
   onSuccess: () => void
 }
 
-export function SellOrderCard({ order, propertyName = "Property", onSuccess }: SellOrderCardProps) {
+export function SellOrderCard({ order, onSuccess }: SellOrderCardProps) {
   const { address } = useAccount()
-  const { currentProject } = useCurrentProject()
+  const project = getProjectById(order.projectId)
   const [error, setError] = useState<string | null>(null)
-  
-  // Get contract configs from current project
-  const mortgageBondConfig = currentProject ? getMortgageBondConfig(currentProject.id) : null
-  const paymentTokenConfig = currentProject ? getPaymentTokenConfig(currentProject.id) : null
-  
+
+  // Get contract configs from project associated with the order
+  const mortgageBondConfig = project ? getMortgageBondConfig(project.id) : null
+  const paymentTokenConfig = project ? getPaymentTokenConfig(project.id) : null
+  const propertyName = project?.name ?? "Property"
+
   const { writeContract: writeApprove, data: approveTx, isPending: isApproving } = useWriteContract()
   const { writeContract: writeBuy, data: buyTx, isPending: isBuying } = useWriteContract()
 
@@ -63,12 +63,12 @@ export function SellOrderCard({ order, propertyName = "Property", onSuccess }: S
 
   const handleBuy = () => {
     setError(null)
-    
+
     if (!paymentTokenConfig || !mortgageBondConfig) {
       setError("Project configuration missing")
       return
     }
-    
+
     if (needsApproval) {
       writeApprove({
         address: paymentTokenConfig.address,
@@ -108,8 +108,8 @@ export function SellOrderCard({ order, propertyName = "Property", onSuccess }: S
             ${sharePrice.toFixed(2)}/share
           </div>
         </div>
-        <Button 
-          size="sm" 
+        <Button
+          size="sm"
           className="bg-primary hover:bg-primary/90"
           onClick={handleBuy}
           disabled={isOwner || isLoading || !address}

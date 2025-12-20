@@ -1,5 +1,3 @@
-
-
 'use client'
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
@@ -20,10 +18,19 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertTriangle } from 'lucide-react'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useFormValidation } from '@/shared/hooks/useFormValidation'
 import { useTransactionWithToast } from '@/shared/hooks/useTransactionState'
 import { useMortgageBond } from '@/shared/hooks/useMortgageBond'
 import { CONTRACTS } from '@/shared/lib/contracts'
+import { useProjects } from '@/domains/projects/hooks/useProjects'
+import { getMortgageBondConfig, getPaymentTokenConfig } from '@/domains/projects/lib/projects'
 import { OrderMode, OrderFormValues } from '@/types/marketplace'
 import { getValidationRules } from '@/domains/marketplace/lib/order-validation'
 import { OrderCreationErrorBoundary } from '@/shared/ui'
@@ -33,7 +40,6 @@ interface OrderCreationModalProps {
   onOpenChange: (open: boolean) => void
   onSuccess?: () => void // Callback to refresh order lists
 }
-
 
 function OrderCreationModalContent({
   open,
@@ -47,14 +53,33 @@ function OrderCreationModalContent({
     (process.env.NEXT_PUBLIC_MARKETPLACE_ENABLE_CREATE_BUY_ORDER ?? 'false')
       .toLowerCase() === 'true'
 
-  // Fetch balances
-  const { investorInfo } = useMortgageBond()
+  const { projects } = useProjects()
+  const [selectedProjectId, setSelectedProjectId] = useState<string>('')
+
+  // Set default project once projects are loaded
+  useEffect(() => {
+    if (projects.length > 0 && !selectedProjectId) {
+      setSelectedProjectId(projects[0].id)
+    }
+  }, [projects, selectedProjectId])
+
+  const mortgageBondConfig = useMemo(() =>
+    selectedProjectId ? getMortgageBondConfig(selectedProjectId) : null
+    , [selectedProjectId])
+
+  const paymentTokenConfig = useMemo(() =>
+    selectedProjectId ? getPaymentTokenConfig(selectedProjectId) : null
+    , [selectedProjectId])
+
+  // Fetch balances for selected project
+  const { investorInfo } = useMortgageBond(selectedProjectId)
   const { data: usdtBalance } = useReadContract({
-    ...CONTRACTS.mockToken,
+    address: paymentTokenConfig?.address,
+    abi: paymentTokenConfig?.abi,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
     query: {
-      enabled: !!address,
+      enabled: !!address && !!paymentTokenConfig,
     },
   })
 
@@ -77,9 +102,14 @@ function OrderCreationModalContent({
     [mode, availableShares, availableUSDT]
   )
 
+  const initialValues = useMemo<OrderFormValues>(
+    () => ({ shares: '', price: '' }),
+    []
+  )
+
   // Form state management
   const form = useFormValidation({
-    initialValues: { shares: '', price: '' } as OrderFormValues,
+    initialValues,
     validationRules,
   })
 
@@ -101,14 +131,15 @@ function OrderCreationModalContent({
 
   // Check token allowance
   const { data: allowance } = useReadContract({
-    ...CONTRACTS.mockToken,
+    address: paymentTokenConfig?.address,
+    abi: paymentTokenConfig?.abi,
     functionName: 'allowance',
     args:
-      address && (mode === 'sell' || mode === 'buy')
-        ? [address, CONTRACTS.mortgageBond.address]
+      address && (mode === 'sell' || mode === 'buy') && mortgageBondConfig
+        ? [address, mortgageBondConfig.address]
         : undefined,
     query: {
-      enabled: !!address && (mode === 'sell' || mode === 'buy'),
+      enabled: !!address && (mode === 'sell' || mode === 'buy') && !!paymentTokenConfig && !!mortgageBondConfig,
     },
   })
 
@@ -122,14 +153,15 @@ function OrderCreationModalContent({
   useEffect(() => {
     if (approveState.isSuccess && !approveState.error) {
       const { shares, price } = form.values
-      if (!address) return
+      if (!address || !mortgageBondConfig) return
 
       // After approval succeeds, create the order
       setTimeout(() => {
         if (mode === 'sell') {
           try {
             writeOrder({
-              ...CONTRACTS.mortgageBond,
+              address: mortgageBondConfig.address,
+              abi: mortgageBondConfig.abi,
               functionName: 'createSellOrder',
               args: [parseUnits(shares, 6), parseUnits(price, 6)],
               account: address,
@@ -142,7 +174,8 @@ function OrderCreationModalContent({
         } else {
           try {
             writeOrder({
-              ...CONTRACTS.mortgageBond,
+              address: mortgageBondConfig.address,
+              abi: mortgageBondConfig.abi,
               functionName: 'createBuyOrder',
               args: [parseUnits(shares, 6), parseUnits(price, 6)],
               account: address,
@@ -155,7 +188,7 @@ function OrderCreationModalContent({
         }
       }, 500)
     }
-  }, [approveState.isSuccess, approveState.error, form.values, mode, address, writeOrder])
+  }, [approveState.isSuccess, approveState.error, form.values, mode, address, writeOrder, mortgageBondConfig])
 
   // Close modal and call onSuccess after order creation
   useEffect(() => {
@@ -165,7 +198,7 @@ function OrderCreationModalContent({
       onSuccess?.()
       form.reset()
     }
-  }, [orderState.isSuccess, orderState.error, onOpenChange, onSuccess, form])
+  }, [orderState.isSuccess, orderState.error, onOpenChange, onSuccess, form.reset])
 
   // Handle errors from transactions
   useEffect(() => {
@@ -195,6 +228,8 @@ function OrderCreationModalContent({
 
       try {
         if (mode === 'sell') {
+          if (!paymentTokenConfig || !mortgageBondConfig) return
+
           // Check if approval is needed for sell order
           const requiredAmount = parseUnits(price, 6)
           const currentAllowance = (allowance ?? BigInt(0)) as bigint
@@ -202,10 +237,11 @@ function OrderCreationModalContent({
           if (currentAllowance < requiredAmount) {
             // Request approval first
             await writeApprove({
-              ...CONTRACTS.mockToken,
+              address: paymentTokenConfig.address,
+              abi: paymentTokenConfig.abi,
               functionName: 'approve',
               args: [
-                CONTRACTS.mortgageBond.address,
+                mortgageBondConfig.address,
                 requiredAmount,
               ],
               account: address,
@@ -213,7 +249,8 @@ function OrderCreationModalContent({
           } else {
             // Allowance sufficient, create sell order directly
             await writeOrder({
-              ...CONTRACTS.mortgageBond,
+              address: mortgageBondConfig.address,
+              abi: mortgageBondConfig.abi,
               functionName: 'createSellOrder',
               args: [
                 parseUnits(shares, 6),
@@ -230,6 +267,9 @@ function OrderCreationModalContent({
             toast.error(msg)
             return
           }
+
+          if (!paymentTokenConfig || !mortgageBondConfig) return
+
           // Buy order - check allowance and create order
           const requiredAmount = parseUnits(price, 6)
           const currentAllowance = (allowance ?? BigInt(0)) as bigint
@@ -237,10 +277,11 @@ function OrderCreationModalContent({
           if (currentAllowance < requiredAmount) {
             // Request approval first
             await writeApprove({
-              ...CONTRACTS.mockToken,
+              address: paymentTokenConfig.address,
+              abi: paymentTokenConfig.abi,
               functionName: 'approve',
               args: [
-                CONTRACTS.mortgageBond.address,
+                mortgageBondConfig.address,
                 requiredAmount,
               ],
               account: address,
@@ -248,7 +289,8 @@ function OrderCreationModalContent({
           } else {
             // Allowance sufficient, create buy order directly
             await writeOrder({
-              ...CONTRACTS.mortgageBond,
+              address: mortgageBondConfig.address,
+              abi: mortgageBondConfig.abi,
               functionName: 'createBuyOrder',
               args: [
                 parseUnits(shares, 6),
@@ -260,12 +302,12 @@ function OrderCreationModalContent({
         }
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : 'Transaction failed'
-        
+
         // Handle wallet disconnection
         if (errorMsg.includes('wallet') || errorMsg.includes('account')) {
           setTransactionError('Wallet disconnected. Please reconnect and try again.')
           toast.error('Wallet disconnected')
-        } 
+        }
         // Handle user rejection
         else if (errorMsg.includes('rejected') || errorMsg.includes('Rejected')) {
           setTransactionError('Transaction was cancelled.')
@@ -291,6 +333,8 @@ function OrderCreationModalContent({
       writeApprove,
       writeOrder,
       isBuyOrderEnabled,
+      paymentTokenConfig,
+      mortgageBondConfig,
     ]
   )
 
@@ -330,6 +374,23 @@ function OrderCreationModalContent({
               : 'Create a buy order at your desired price point'}
           </DialogDescription>
         </DialogHeader>
+
+        {/* Project Selection */}
+        <div className="space-y-2">
+          <Label htmlFor="project-select">Select Property</Label>
+          <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+            <SelectTrigger id="project-select">
+              <SelectValue placeholder="Select a property" />
+            </SelectTrigger>
+            <SelectContent>
+              {projects.map((project) => (
+                <SelectItem key={project.id} value={project.id}>
+                  {project.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
         {/* Transaction Error Display */}
         {transactionError && (
@@ -371,7 +432,6 @@ function OrderCreationModalContent({
                   value={form.fields.shares.value}
                   onChange={(e) => {
                     form.setValue('shares', e.target.value)
-                    form.validateField('shares')
                   }}
                   disabled={isLoading}
                 />
@@ -394,7 +454,6 @@ function OrderCreationModalContent({
                   value={form.fields.price.value}
                   onChange={(e) => {
                     form.setValue('price', e.target.value)
-                    form.validateField('price')
                   }}
                   disabled={isLoading}
                 />
@@ -426,7 +485,6 @@ function OrderCreationModalContent({
                     value={form.fields.shares.value}
                     onChange={(e) => {
                       form.setValue('shares', e.target.value)
-                      form.validateField('shares')
                     }}
                     disabled={isLoading}
                   />
@@ -449,7 +507,6 @@ function OrderCreationModalContent({
                     value={form.fields.price.value}
                     onChange={(e) => {
                       form.setValue('price', e.target.value)
-                      form.validateField('price')
                     }}
                     disabled={isLoading}
                   />
