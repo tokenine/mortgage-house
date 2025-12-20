@@ -28,50 +28,40 @@ function normalizePayload(json: any) {
   return []
 }
 
-async function fetchOnChainStats() {
+async function fetchStatsForProject(client: any, address: `0x${string}`) {
   try {
-    const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL || customChain.rpcUrls.default.http[0]
-
-    const client = createPublicClient({
-      chain: customChain,
-      transport: http(rpcUrl),
-    })
-
-    // Use individual contract reads instead of multicall to avoid multicall3 dependency
     const [fundingCapRaw, totalRaisedRaw, isFundingActiveRaw] = await Promise.all([
       client.readContract({
-        ...CONTRACTS.mortgageBond,
+        address,
+        abi: CONTRACTS.mortgageBond.abi,
         functionName: "FUNDING_CAP",
-        args: [],
       }),
       client.readContract({
-        ...CONTRACTS.mortgageBond,
+        address,
+        abi: CONTRACTS.mortgageBond.abi,
         functionName: "totalPrincipalRaised",
-        args: [],
       }),
       client.readContract({
-        ...CONTRACTS.mortgageBond,
+        address,
+        abi: CONTRACTS.mortgageBond.abi,
         functionName: "isFundingActive",
-        args: [],
       }),
     ])
 
-    const fundingCap = fundingCapRaw ? Number(formatUnits(fundingCapRaw as bigint, 6)) : undefined
-    const totalRaised = totalRaisedRaw ? Number(formatUnits(totalRaisedRaw as bigint, 6)) : undefined
-    const isFundingActive = Boolean(isFundingActiveRaw)
-
-    return { fundingCap, totalRaised, isFundingActive }
+    return {
+      fundingCap: Number(formatUnits(fundingCapRaw as bigint, 6)),
+      totalRaised: Number(formatUnits(totalRaisedRaw as bigint, 6)),
+      isFundingActive: Boolean(isFundingActiveRaw),
+    }
   } catch (error) {
-    console.error("Failed to fetch on-chain project stats", error)
+    console.error(`Failed to fetch on-chain stats for project ${address}:`, error)
     return null
   }
 }
 
 export async function GET() {
   try {
-    // Correct path: process.cwd() in the frontend app is .../frontend
     const filePath = path.join(process.cwd(), "domains", "projects", "data", "projects.json")
-
     const raw = await fs.readFile(filePath, "utf-8")
     const parsed = JSON.parse(raw)
     const projects = normalizePayload(parsed)
@@ -79,30 +69,44 @@ export async function GET() {
     const valid = projects.filter(isValidProject)
     const isPartial = valid.length !== projects.length
 
-    const onChain = await fetchOnChainStats()
-
-    const projectsWithOnChain = valid.map((project: { onChain: { chainId: any; decimals: any }; fundingCap: any; raised: any }) => {
-      const chainId = project.onChain?.chainId ?? customChain.id
-      const decimals = project.onChain?.decimals ?? 6
-
-      const onChainMeta = {
-        mortgageBondAddress: CONTRACTS.mortgageBond.address,
-        paymentTokenAddress: CONTRACTS.mockToken.address,
-        chainId: chainId as number,
-        decimals: decimals as number,
-        isFundingActive: onChain?.isFundingActive,
-      } satisfies ProjectOnChainMetadata
-
-      return {
-        ...project,
-        fundingCap: onChain?.fundingCap ?? project.fundingCap,
-        raised: onChain?.totalRaised ?? project.raised,
-        onChain: onChainMeta,
-      }
+    const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL || customChain.rpcUrls.default.http[0]
+    const client = createPublicClient({
+      chain: customChain,
+      transport: http(rpcUrl),
     })
 
+    const projectsWithOnChain = await Promise.all(
+      valid.map(async (project: any) => {
+        const bondAddress = project.onChain?.mortgageBondAddress as `0x${string}`
+        const chainId = project.onChain?.chainId ?? customChain.id
+        const decimals = project.onChain?.decimals ?? 6
+
+        // Fetch individual stats for this project's address
+        const onChain = bondAddress ? await fetchStatsForProject(client, bondAddress) : null
+
+        const onChainMeta = {
+          mortgageBondAddress: bondAddress || CONTRACTS.mortgageBond.address,
+          paymentTokenAddress: project.onChain?.paymentTokenAddress || CONTRACTS.mockToken.address,
+          chainId: chainId as number,
+          decimals: decimals as number,
+          isFundingActive: onChain?.isFundingActive ?? false,
+        } satisfies ProjectOnChainMetadata
+
+        return {
+          ...project,
+          fundingCap: onChain?.fundingCap ?? project.fundingCap,
+          raised: onChain?.totalRaised ?? project.raised,
+          onChain: onChainMeta,
+        }
+      })
+    )
+
     const res = NextResponse.json(
-      { projects: projectsWithOnChain, partial: isPartial, onChainAvailable: Boolean(onChain) },
+      {
+        projects: projectsWithOnChain,
+        partial: isPartial,
+        onChainAvailable: projectsWithOnChain.some(p => p.onChain.isFundingActive !== undefined)
+      },
       { status: 200 }
     )
     res.headers.set("Cache-Control", "no-store")

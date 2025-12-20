@@ -28,7 +28,7 @@ export function PropertyCard({
   investors,
   image,
 }: PropertyCardProps) {
-  const fundingPercentage = (raised / fundingCap) * 100
+  const fundingPercentage = fundingCap > 0 ? (raised / fundingCap) * 100 : 0
 
   return (
     <Card className="bg-card border-border overflow-hidden">
